@@ -141,7 +141,7 @@ function Categories() {
     axiosClient
       .get("/categories")
       .then((response) => {
-        // console.log(response.data);
+        console.log(response.data);
         setCategories(response.data);
       })
       .catch((err) => {
