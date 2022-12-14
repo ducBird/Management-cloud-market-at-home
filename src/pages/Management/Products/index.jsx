@@ -22,7 +22,7 @@ import "./products.css";
 import moment from "moment";
 import numeral from "numeral";
 import { API_URL } from "../../../constants/URLS";
-
+import TextArea from "antd/lib/input/TextArea";
 function Products() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
