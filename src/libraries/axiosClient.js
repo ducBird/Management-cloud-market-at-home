@@ -55,7 +55,7 @@ axiosClient.interceptors.response.use(
         // Trường hợp không có token thì chuyển sang trang LOGIN
         const token = window.localStorage.getItem("token");
         if (!token) {
-          window.location.href = "/account";
+          // window.location.href = "/account";
           return Promise.reject(error);
         }
 

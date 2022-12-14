@@ -1,5 +1,5 @@
-import React from "react";
-import { Input, Button, Divider, Form, Checkbox } from "antd";
+import React, { useEffect } from "react";
+import { Input, Button, Divider, Form, Checkbox, message } from "antd";
 import { axiosClient } from "../../libraries/axiosClient";
 
 export default function Login() {
@@ -10,6 +10,18 @@ export default function Login() {
       .then((response) => {
         window.location.href = "/home";
         // console.log(response.data);
+        // console.log(values);
+        // console.log(username);
+        // console.log(values.password);
+
+        // axiosClient
+        //   .get(`/auth/${response.data._id}`)
+        //   .then((res) => {
+        //     // console.log(res.data);
+        //   })
+        //   .catch((err) => {
+        //     console.log(err);
+        //   });
       })
       .catch((err) => {
         if (err.response.status === 401) {

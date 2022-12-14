@@ -71,7 +71,12 @@ function App() {
               >
                 <Routes>
                   {/* HOME */}
-                  <Route path="/" element={<Login />} />
+                  {window.localStorage.getItem("token") ? (
+                    <Route path="/" element={<HomePage />} />
+                  ) : (
+                    <Route path="/" element={<Login />} />
+                  )}
+
                   <Route path="/home" element={<HomePage />} />
                   {/* LOGIN */}
                   <Route path="/account" element={<Login />} />
