@@ -18,6 +18,7 @@ import {
   AiOutlineLoading,
 } from "react-icons/ai";
 import "./categories.css";
+import axios from "axios";
 import moment from "moment";
 import TextArea from "antd/lib/input/TextArea";
 import { API_URL } from "../../../constants/URLS";
@@ -27,6 +28,7 @@ function Categories() {
   const [refresh, setRefresh] = useState(0);
   const [editFormVisible, setEditFormVisible] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [file, setFile] = useState();
 
   const columns = [
     {
@@ -71,10 +73,8 @@ function Categories() {
               showUploadList={false}
               name="file"
               data={{ name: "uploads file image category" }}
-              action={
-                "http://localhost:9000/upload-categories/categories/" +
-                record._id
-              }
+              action={`${API_URL}/upload-categories/categories/" 
+                ${record._id}`}
               headers={{ authorization: "authorization-text" }}
               onChange={(info) => {
                 if (info.file.status !== "uploading") {
@@ -82,12 +82,10 @@ function Categories() {
                 }
 
                 if (info.file.status === "done") {
-                  message.success(
-                    `${info.file.name} file uploaded successfully`
-                  );
+                  message.success(`${info.file.name} file tải lên thành công`);
                   setRefresh((f) => f + 1);
                 } else if (info.file.status === "error") {
-                  message.error(`${info.file.name} file upload failed.`);
+                  message.error(`${info.file.name} file tải lên thất bại.`);
                 }
               }}
             >
@@ -109,23 +107,23 @@ function Categories() {
             </Button>
             {/* Button Delete */}
             <Popconfirm
-              title="Are you sure to delete this task?"
+              title="Bạn có chắc muốn xóa dòng này không?"
               onConfirm={() => {
                 const id = record._id;
                 axiosClient
                   .delete("/categories/" + id)
                   .then((response) => {
-                    message.success("Deleted Successfully!");
+                    message.success("Xóa thành công!");
                     setRefresh((f) => f + 1);
                   })
                   .catch((err) => {
                     console.log(err);
-                    message.error("Deleted Failed!");
+                    message.error("Xóa thất bại!");
                   });
               }}
               onCancel={() => {}}
-              okText="Yes"
-              cancelText="No"
+              okText="Có"
+              cancelText="Không"
             >
               <Button danger className="py-5 flex items-center">
                 {<AiFillDelete size={"16px"} />}
@@ -141,7 +139,7 @@ function Categories() {
     axiosClient
       .get("/categories")
       .then((response) => {
-        console.log(response.data);
+        // console.log(response.data);
         setCategories(response.data);
       })
       .catch((err) => {
@@ -153,12 +151,23 @@ function Categories() {
     axiosClient
       .post("/categories", values)
       .then((response) => {
-        message.success("Successfully Added!");
-        createForm.resetFields();
-        setRefresh((f) => f + 1);
+        //UPLOAD FILE
+        const { _id } = response.data;
+        const formData = new FormData();
+        formData.append("file", file);
+        axios
+          .post(API_URL + "/upload-categories/categories/" + _id, formData)
+          .then((response) => {
+            message.success("Thêm thành công!");
+            createForm.resetFields();
+            setRefresh((f) => f + 1);
+          })
+          .catch((err) => {
+            message.error("Tải lên hình ảnh thất bại!");
+          });
       })
       .catch((err) => {
-        message.error("Added Failed!");
+        message.error("Thêm thất bại!");
         console.log(err);
       });
     console.log("👌👌👌", values);
@@ -171,13 +180,13 @@ function Categories() {
     axiosClient
       .patch("/categories/" + selectedRecord._id, values)
       .then((response) => {
-        message.success("Successfully Updated!");
+        message.success("Cập nhật thành công!");
         updateForm.resetFields();
         setRefresh((f) => f + 1);
         setEditFormVisible(false);
       })
       .catch((err) => {
-        message.error("Updated Failed!");
+        message.error("Cập nhật thất bại!");
         console.log(err);
       });
   };
@@ -221,34 +230,30 @@ function Categories() {
           </Form.Item>
 
           {/* Hình ảnh */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Hình ảnh"
-            name="imageUrl"
-            valuePropName=""
-          >
+          {/* <Form.Item label="Hình ảnh" name="file">
             <Upload
-              showUploadList={false}
+              showUploadList={true}
               listType="picture-card"
-              name="file"
-              action={"http://localhost:9000/uploadsCategories/categories/"}
-              onChange={(info) => {
-                if (info.file.status !== "uploading") {
-                  console.log(info.file, info.fileList);
-                }
-
-                if (info.file.status === "done") {
-                  message.success(
-                    `${info.file.name} file uploaded successfully`
-                  );
-                  setRefresh((f) => f + 1);
-                } else if (info.file.status === "error") {
-                  message.error(`${info.file.name} file upload failed.`);
-                }
+              beforeUpload={(file) => {
+                setFile(file);
+                return false;
               }}
             >
               <AiOutlinePlus size={"20px"} />
+            </Upload>
+          </Form.Item> */}
+          <Form.Item label="Hình ảnh" name="file">
+            <Upload
+              showUploadList={true}
+              // listType="picture-card"
+              beforeUpload={(file) => {
+                setFile(file);
+                return false;
+              }}
+            >
+              <div className="flex justify-center items-center w-[100px] h-[100px] border border-dashed rounded-lg hover:cursor-pointer hover:border-blue-400 hover:bg-white transition-all ease-in duration-150">
+                <AiOutlinePlus size={"20px"} />
+              </div>
             </Upload>
           </Form.Item>
 
