@@ -64,8 +64,8 @@ export default function Login() {
             { required: true, message: "Password không thể để trống" },
             {
               min: 5,
-              max: 10,
-              message: "Độ dài mật khẩu từ 5-10 kí tự",
+              max: 50,
+              message: "Độ dài mật khẩu từ 5-50 kí tự",
             },
           ]}
         >
