@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { axiosClient } from '../../../libraries/axiosClient';
-import { API_URL } from '../../../constants/URLS';
+import React, { useEffect, useState } from "react";
+import { axiosClient } from "../../../libraries/axiosClient";
+import { API_URL } from "../../../constants/URLS";
 import {
   Table,
   Button,
@@ -12,15 +12,15 @@ import {
   message,
   Select,
   Upload,
-} from 'antd';
+} from "antd";
 import {
   AiFillEdit,
   AiFillDelete,
   AiFillQuestionCircle,
   AiOutlineUpload,
-} from 'react-icons/ai';
-import './customers.css';
-import moment from 'moment';
+} from "react-icons/ai";
+import "./customers.css";
+import moment from "moment";
 
 function Customers() {
   const [customers, setCustomers] = useState([]);
@@ -30,9 +30,9 @@ function Customers() {
 
   const columns = [
     {
-      title: '',
-      dataIndex: 'avatar',
-      key: 'avatar',
+      title: "",
+      dataIndex: "avatar",
+      key: "avatar",
       render: (text, record) => {
         return (
           <div className="text-center">
@@ -48,38 +48,38 @@ function Customers() {
       },
     },
     {
-      title: 'Họ Và Tên',
-      dataIndex: 'fullName',
-      key: 'fullName',
+      title: "Họ Và Tên",
+      dataIndex: "fullName",
+      key: "fullName",
     },
     {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
     },
     {
-      title: 'SĐT',
-      dataIndex: 'phoneNumber',
-      key: 'phoneNumber',
+      title: "SĐT",
+      dataIndex: "phoneNumber",
+      key: "phoneNumber",
     },
     {
-      title: 'Địa Chỉ',
-      dataIndex: 'address',
-      key: 'address',
-      width: '20%',
+      title: "Địa Chỉ",
+      dataIndex: "address",
+      key: "address",
+      width: "20%",
     },
     {
-      title: 'Ngày Sinh',
-      dataIndex: 'birthDay',
-      key: 'birthDay',
+      title: "Ngày Sinh",
+      dataIndex: "birthDay",
+      key: "birthDay",
       render: (text) => {
-        return <span>{moment(text).format('DD/MM/yyyy')}</span>;
+        return <span>{moment(text).format("DD/MM/yyyy")}</span>;
       },
     },
     {
-      title: '',
-      key: 'actions',
-      width: '1%',
+      title: "",
+      key: "actions",
+      width: "1%",
       render: (text, record) => {
         return (
           <div className="flex gap-5">
@@ -87,29 +87,29 @@ function Customers() {
             <Upload
               showUploadList={false}
               name="file"
-              data={{ name: 'uploads file image customer' }}
+              data={{ name: "uploads file image customer" }}
               action={
-                'http://localhost:9000/upload-customers/customers/' + record._id
+                "http://localhost:9000/upload-customers/customers/" + record._id
               }
-              headers={{ authorization: 'authorization-text' }}
+              headers={{ authorization: "authorization-text" }}
               onChange={(info) => {
-                if (info.file.status !== 'uploading') {
+                if (info.file.status !== "uploading") {
                   console.log(info.file, info.fileList);
                 }
 
-                if (info.file.status === 'done') {
+                if (info.file.status === "done") {
                   message.success(
                     `${info.file.name} file uploaded successfully`
                   );
                   setRefresh((f) => f + 1);
-                } else if (info.file.status === 'error') {
+                } else if (info.file.status === "error") {
                   message.error(`${info.file.name} file upload failed.`);
                 }
               }}
             >
               <Button
                 className="py-5 flex justify-center items-center"
-                icon={<AiOutlineUpload size={'20px'} />}
+                icon={<AiOutlineUpload size={"20px"} />}
               />
             </Upload>
             {/* Button Edit */}
@@ -121,7 +121,7 @@ function Customers() {
                 setEditFormVisible(true);
               }}
             >
-              {<AiFillEdit size={'16px'} />}
+              {<AiFillEdit size={"16px"} />}
             </Button>
             {/* Button Delete */}
             <Popconfirm
@@ -129,13 +129,13 @@ function Customers() {
               onConfirm={() => {
                 const id = record._id;
                 axiosClient
-                  .delete('/customers/' + id)
+                  .delete("/customers/" + id)
                   .then((response) => {
-                    message.success('Deleted Successfully');
+                    message.success("Deleted Successfully");
                     setRefresh((f) => f + 1);
                   })
                   .catch((errors) => {
-                    message.error('Deleted Failed');
+                    message.error("Deleted Failed");
                   });
               }}
               onCancel={() => {}}
@@ -143,7 +143,7 @@ function Customers() {
               cancelText="No"
             >
               <Button className="py-5 flex items-center" danger>
-                {<AiFillDelete size={'16px'} />}
+                {<AiFillDelete size={"16px"} />}
               </Button>
             </Popconfirm>
           </div>
@@ -153,43 +153,43 @@ function Customers() {
   ];
 
   useEffect(() => {
-    axiosClient.get('/customers').then((response) => {
+    axiosClient.get("/customers").then((response) => {
       setCustomers(response.data);
     });
   }, [refresh]);
 
   const onFinish = (values) => {
     axiosClient
-      .post('/customers', values)
+      .post("/customers", values)
       .then((response) => {
-        message.success('Successfully Added');
+        message.success("Successfully Added");
         createForm.resetFields(); //reset input form
         setRefresh((f) => f + 1);
       })
       .catch((err) => {
-        message.error('Added Failed');
+        message.error("Added Failed");
       });
-    console.log('👌👌👌', values);
+    console.log("👌👌👌", values);
   };
   const onFinishFailed = (errors) => {
-    console.log('💣💣💣 ', errors);
+    console.log("💣💣💣 ", errors);
   };
   const onUpdateFinish = (values) => {
     axiosClient
-      .patch('/customers/' + selectedRecord._id, values)
+      .patch("/customers/" + selectedRecord._id, values)
       .then((response) => {
-        message.success('Successfully Updated!');
+        message.success("Successfully Updated!");
         updateForm.resetFields();
         setRefresh((f) => f + 1);
         setEditFormVisible(false);
       })
       .catch((err) => {
-        message.error('Updated Failed!');
+        message.error("Updated Failed!");
       });
   };
 
   const onUpdateFinishFailed = (errors) => {
-    console.log('🐣', errors);
+    console.log("🐣", errors);
   };
 
   const [createForm] = Form.useForm();
@@ -215,7 +215,7 @@ function Customers() {
             label="Họ - Tên Đệm"
             name="firstName"
             rules={[
-              { required: true, message: 'Please input your first name!' },
+              { required: true, message: "Please input your first name!" },
             ]}
           >
             <Input />
@@ -228,7 +228,7 @@ function Customers() {
             label="Tên"
             name="lastName"
             rules={[
-              { required: true, message: 'Please input your last name!' },
+              { required: true, message: "Please input your last name!" },
             ]}
           >
             <Input />
@@ -241,8 +241,8 @@ function Customers() {
             label="Email"
             name="email"
             rules={[
-              { required: true, message: 'Please input your email!' },
-              { type: 'email', message: `Invalid Email` },
+              { required: true, message: "Please input your email!" },
+              { type: "email", message: `Invalid Email` },
             ]}
           >
             <Input />
@@ -255,7 +255,7 @@ function Customers() {
             label="Số điện thoại"
             name="phoneNumber"
             rules={[
-              { required: true, message: 'Please input your phone number!' },
+              { required: true, message: "Please input your phone number!" },
             ]}
           >
             <Input />
@@ -267,7 +267,7 @@ function Customers() {
             className=""
             label="Địa chỉ"
             name="address"
-            rules={[{ required: true, message: 'Please input your address!' }]}
+            rules={[{ required: true, message: "Please input your address!" }]}
           >
             <Input />
           </Form.Item>
@@ -317,7 +317,7 @@ function Customers() {
             label="Họ - Tên Đệm"
             name="firstName"
             rules={[
-              { required: true, message: 'Please input your first name!' },
+              { required: true, message: "Please input your first name!" },
             ]}
           >
             <Input />
@@ -330,7 +330,7 @@ function Customers() {
             label="Tên"
             name="lastName"
             rules={[
-              { required: true, message: 'Please input your last name!' },
+              { required: true, message: "Please input your last name!" },
             ]}
           >
             <Input />
@@ -343,8 +343,8 @@ function Customers() {
             label="Email"
             name="email"
             rules={[
-              { required: true, message: 'Please input your email!' },
-              { type: 'email', message: `Invalid Email` },
+              { required: true, message: "Please input your email!" },
+              { type: "email", message: `Invalid Email` },
             ]}
           >
             <Input />
@@ -357,7 +357,7 @@ function Customers() {
             label="Số điện thoại"
             name="phoneNumber"
             rules={[
-              { required: true, message: 'Please input your phone number!' },
+              { required: true, message: "Please input your phone number!" },
             ]}
           >
             <Input />
@@ -369,7 +369,7 @@ function Customers() {
             className=""
             label="Địa chỉ"
             name="address"
-            rules={[{ required: true, message: 'Please input your address!' }]}
+            rules={[{ required: true, message: "Please input your address!" }]}
           >
             <Input />
           </Form.Item>
