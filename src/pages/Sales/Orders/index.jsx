@@ -11,11 +11,15 @@ import {
   message,
   Input,
   Select,
+  Space,
+  Popconfirm,
 } from "antd";
-
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { axiosClient } from "../../../libraries/axiosClient";
 
 export default function Orders() {
+  const [editFormVisible, setEditFormVisible] = React.useState(false);
+  const [selectedRecord, setSelectedRecord] = React.useState(null);
   const [addProductsModalVisible, setAddProductsModalVisible] =
     React.useState(false);
   const [employees, setEmployees] = React.useState([]);
@@ -142,7 +146,6 @@ export default function Orders() {
       dataIndex: "status",
       key: "status",
     },
-
     {
       title: "Nhân viên",
       dataIndex: "employee",
@@ -182,16 +185,69 @@ export default function Orders() {
         );
       },
     },
+    // delete, update
+    {
+      title: "",
+      key: "actions",
+      width: "1%",
+      render: (text, record) => {
+        return (
+          <Space>
+            {/* Update */}
+            <Button
+              type="dashed"
+              icon={<EditOutlined />}
+              onClick={() => {
+                setSelectedRecord(record);
+                console.log("selectes", record);
+                updateForm.setFieldsValue(record);
+                setEditFormVisible(true);
+              }}
+            />
+            {/* delete */}
+            <Popconfirm
+              title="Bạn có muốn xóa không"
+              onConfirm={() => {
+                //delete
+                const id = record._id;
+                axiosClient
+                  .delete("/orders/" + id)
+                  .then((response) => {
+                    message.success("Xóa thành công");
+                    setRefresh((pre) => pre + 1);
+                  })
+                  .catch((err) => {
+                    message.error("Xóa thất bại");
+                  });
+                console.log("delete", record);
+              }}
+              onCancel={() => {}}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button danger icon={<DeleteOutlined />} />
+            </Popconfirm>
+          </Space>
+        );
+      },
+    },
   ];
 
   const [orders, setOrders] = React.useState([]);
+
+  // create form
   const [createForm] = Form.useForm();
+  // update form
+  const [updateForm] = Form.useForm();
+
   // get list employees
   React.useEffect(() => {
     axiosClient.get("/employees").then((response) => {
       setEmployees(response.data);
     });
   }, []);
+
+  // tạo mới form
   const onFinish = (values) => {
     axiosClient
       .post("/orders", values)
@@ -208,6 +264,29 @@ export default function Orders() {
   };
   const onFinishFailed = (errors) => {
     console.log("💣💣💣 ", errors);
+  };
+
+  // update form
+  // xử lý cập nhật thông tin
+  const onUpdateFinish = (values) => {
+    axiosClient
+      .patch("/orders/" + selectedRecord._id, values)
+      .then((response) => {
+        message.success("Cập nhật thành công ❤");
+        updateForm.resetFields();
+        // load lại form
+        setRefresh((pre) => pre + 1);
+        // đóng
+        setEditFormVisible(false);
+        console.log();
+      })
+      .catch((err) => {
+        message.error("Cập nhật thất bại 😥");
+      });
+    console.log("❤", values);
+  };
+  const onUpdateFinishFailed = (errors) => {
+    console.log("💣", errors);
   };
   return (
     <div>
@@ -229,7 +308,7 @@ export default function Orders() {
             className=""
             label="Ngày tạo"
             name="createdDate"
-            rules={[{ required: false }]}
+            rules={[{ required: true }]}
           >
             <Input />
           </Form.Item>
@@ -241,7 +320,7 @@ export default function Orders() {
             label="Ngày giao"
             name="shippedDate"
             rules={[
-              { required: false, type: "Date", message: "Invalid datetime" },
+              { required: true, type: "Date", message: "Invalid datetime" },
               // {
               //   validator: function (value) {
               //     if (!value) return true;
@@ -408,6 +487,15 @@ export default function Orders() {
               <Descriptions.Item label="Số điện thoại">
                 {selectedOrder.phoneNumber}
               </Descriptions.Item>
+              <Descriptions.Item label="Ngày tạo hóa đơn">
+                {selectedOrder.createdDate}
+              </Descriptions.Item>
+              <Descriptions.Item label="Ngày giao">
+                {selectedOrder.shippedDate}
+              </Descriptions.Item>
+              <Descriptions.Item label="Địa chỉ giao hàng">
+                {selectedOrder.shippingAddress}
+              </Descriptions.Item>
               <Descriptions.Item label="Nhân viên">
                 {selectedOrder.employee?.fullName}
               </Descriptions.Item>
@@ -485,6 +573,195 @@ export default function Orders() {
             </Modal>
           </div>
         )}
+      </Modal>
+
+      {/* update form */}
+      <Modal
+        centered
+        open={editFormVisible}
+        title="Cập nhật thông tin"
+        onOk={() => {
+          updateForm.submit();
+        }}
+        onCancel={() => {
+          setEditFormVisible(false);
+        }}
+        okText="Lưu thông tin"
+        cancelText="Đóng"
+      >
+        <Form
+          form={updateForm}
+          name="update-form"
+          labelCol={{ span: 10 }}
+          wrapperCol={{ span: 16 }}
+          initialValues={{ remember: true }}
+          onFinish={onUpdateFinish}
+          onFinishFailed={onUpdateFinishFailed}
+          autoComplete="off"
+        >
+          <div className="w-[80%]">
+            {/* Created Date */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Ngày tạo"
+              name="createdDate"
+              rules={[{ required: false }]}
+            >
+              <Input />
+            </Form.Item>
+
+            {/* Shipped Date */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Ngày giao"
+              name="shippedDate"
+              rules={[
+                { required: false, type: "Date", message: "Invalid datetime" },
+                // {
+                //   validator: function (value) {
+                //     if (!value) return true;
+                //     if (value < createDate) {
+                //       return false;
+                //     }
+                //     return true;
+                //   },
+                //   message: `Shipped date: {VALUE} < Created Date!`,
+                // },
+              ]}
+            >
+              <Input value={Date.now()} />
+            </Form.Item>
+
+            {/* Status */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Trạng thái đơn hàng"
+              name="status"
+              rules={[
+                { required: true, message: "Please select status!" },
+                {
+                  validate: {
+                    validator: (value) => {
+                      if (
+                        ["WAITING", "COMPLETED", "CANCELED"].includes(value)
+                      ) {
+                        return true;
+                      } else {
+                        return false;
+                      }
+                    },
+                    message: `status: {status} is invalid`,
+                  },
+                },
+              ]}
+            >
+              <Select
+                options={[
+                  {
+                    value: "COMPLETED",
+                    label: "COMPLETED",
+                  },
+                  {
+                    value: "WAITING",
+                    label: "WAITING",
+                  },
+                  {
+                    value: "CANCELED",
+                    label: "CANCELED",
+                  },
+                ]}
+              />
+            </Form.Item>
+
+            {/* Description */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Mô tả"
+              name="description"
+            >
+              <Input />
+            </Form.Item>
+
+            {/* Shipping Address */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Địa chỉ giao hàng"
+              name="shippingAddress"
+              rules={[
+                { required: true, message: "Please input Shipping Address!" },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+
+            {/* Payment Type */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Hình thức thanh toán"
+              name="paymentType"
+              rules={[
+                { required: true, message: "Please select payment type!" },
+              ]}
+            >
+              <Select
+                options={[
+                  {
+                    value: "MOMO",
+                    label: "MOMO",
+                  },
+                  {
+                    value: "CASH",
+                    label: "CASH",
+                  },
+                ]}
+              />
+            </Form.Item>
+
+            {/* Customer */}
+            <Form.Item
+              className=""
+              label="Khách hàng"
+              name="fullName"
+              rules={[{ required: true, message: "Please selected customer!" }]}
+            >
+              <Input />
+            </Form.Item>
+            {/* PhoneNumber */}
+            <Form.Item
+              className=""
+              label="Số điện thoại"
+              name="phoneNumber"
+              rules={[{ required: true, message: "Please selected customer!" }]}
+            >
+              <Input />
+            </Form.Item>
+            {/* Employee */}
+            <Form.Item
+              className=""
+              label="Nhân viên"
+              name="employeeId"
+              rules={[{ required: true, message: "Please selected empoyees!" }]}
+            >
+              <Select
+                options={
+                  employees &&
+                  employees.map((suplier) => {
+                    return {
+                      value: suplier._id,
+                      label: suplier.fullName,
+                    };
+                  })
+                }
+              />
+            </Form.Item>
+          </div>
+        </Form>
       </Modal>
 
       <Table rowKey="_id" dataSource={orders} columns={columns} />
