@@ -19,6 +19,8 @@ import Customers from "./pages/Management/Customers";
 import Suppliers from "./pages/Management/Suppliers";
 import Orders from "./pages/Sales/Orders";
 import Login from "./pages/Login";
+import Accounts from "./pages/Management/Accounts";
+import GuestService from "./pages/Management/GuestServices";
 
 const { Header, Content, Sider } = Layout;
 function App() {
@@ -81,6 +83,8 @@ function App() {
                   {/* LOGIN */}
                   <Route path="/account" element={<Login />} />
                   {/* MANAGEMENT */}
+                  <Route path="/management/accounts" element={<Accounts />} />
+
                   <Route path="/management/employees" element={<Employees />} />
                   <Route
                     path="/management/categories"
@@ -89,6 +93,10 @@ function App() {
                   <Route path="/management/products" element={<Products />} />
                   <Route path="/management/customers" element={<Customers />} />
                   <Route path="/management/suppliers" element={<Suppliers />} />
+                  <Route
+                    path="/management/guestServices"
+                    element={<GuestService />}
+                  />
                   {/* SALES */}
                   <Route path="/sales/orders" element={<Orders />} />
                   <Route
