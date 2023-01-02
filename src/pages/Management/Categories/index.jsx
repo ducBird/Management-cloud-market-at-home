@@ -16,6 +16,7 @@ import {
   AiOutlineUpload,
   AiOutlinePlus,
   AiOutlineLoading,
+  AiFillQuestionCircle,
 } from "react-icons/ai";
 import "./categories.css";
 import axios from "axios";
@@ -73,14 +74,12 @@ function Categories() {
               showUploadList={false}
               name="file"
               data={{ name: "uploads file image category" }}
-              action={`${API_URL}/upload-categories/categories/" 
-                ${record._id}`}
+              action={`${API_URL}/upload-image/categories/${record._id}`}
               headers={{ authorization: "authorization-text" }}
               onChange={(info) => {
                 if (info.file.status !== "uploading") {
                   console.log(info.file, info.fileList);
                 }
-
                 if (info.file.status === "done") {
                   message.success(`${info.file.name} file tải lên thành công`);
                   setRefresh((f) => f + 1);
@@ -94,6 +93,7 @@ function Categories() {
                 icon={<AiOutlineUpload size={"20px"} />}
               />
             </Upload>
+
             {/* Button Edit */}
             <Button
               className="py-5 flex items-center"
@@ -107,7 +107,10 @@ function Categories() {
             </Button>
             {/* Button Delete */}
             <Popconfirm
-              title="Bạn có chắc muốn xóa dòng này không?"
+              icon={
+                <AiFillQuestionCircle size={"24px"} className="text-red-600" />
+              }
+              title="Bạn có chắc muốn xóa danh mục này không?"
               onConfirm={() => {
                 const id = record._id;
                 axiosClient
@@ -156,15 +159,16 @@ function Categories() {
         const formData = new FormData();
         formData.append("file", file);
         axios
-          .post(API_URL + "/upload-categories/categories/" + _id, formData)
+          .post(`${API_URL}/upload-image/categories/${_id}`, formData)
           .then((response) => {
-            message.success("Thêm thành công!");
+            // message.success("Tải lên hình ảnh thành công!");
             createForm.resetFields();
             setRefresh((f) => f + 1);
           })
           .catch((err) => {
             message.error("Tải lên hình ảnh thất bại!");
           });
+        message.success("Thêm thành công!");
       })
       .catch((err) => {
         message.error("Thêm thất bại!");
@@ -172,6 +176,7 @@ function Categories() {
       });
     console.log("👌👌👌", values);
   };
+
   const onFinishFailed = (errors) => {
     console.log("💣💣💣 ", errors);
   };
@@ -180,10 +185,20 @@ function Categories() {
     axiosClient
       .patch("/categories/" + selectedRecord._id, values)
       .then((response) => {
-        message.success("Cập nhật thành công!");
-        updateForm.resetFields();
-        setRefresh((f) => f + 1);
-        setEditFormVisible(false);
+        const { _id } = response.data;
+        const formData = new FormData();
+        formData.append("file", file);
+        axios
+          .post(`${API_URL}/upload-image/categories/${_id}`, formData)
+          .then((response) => {
+            message.success("Cập nhật thành công!");
+            updateForm.resetFields();
+            setRefresh((f) => f + 1);
+            setEditFormVisible(false);
+          })
+          .catch((err) => {
+            message.error("Tải lên hình ảnh thất bại!");
+          });
       })
       .catch((err) => {
         message.error("Cập nhật thất bại!");
@@ -219,7 +234,9 @@ function Categories() {
             className=""
             label="Tên danh mục"
             name="name"
-            rules={[{ required: true, message: "Please input name category!" }]}
+            rules={[
+              { required: true, message: "Tên danh mục không được để trống!" },
+            ]}
           >
             <Input />
           </Form.Item>
@@ -242,7 +259,13 @@ function Categories() {
               <AiOutlinePlus size={"20px"} />
             </Upload>
           </Form.Item> */}
-          <Form.Item label="Hình ảnh" name="file">
+          <Form.Item
+            label="Hình ảnh"
+            name="file"
+            rules={[
+              { required: true, message: "Hãy chọn hình ảnh cho danh mục!" },
+            ]}
+          >
             <Upload
               showUploadList={true}
               // listType="picture-card"
@@ -303,6 +326,27 @@ function Categories() {
           {/* Mô tả */}
           <Form.Item hasFeedback className="" label="Mô tả" name="description">
             <TextArea rows={5} />
+          </Form.Item>
+
+          <Form.Item
+            label="Hình ảnh"
+            name="file"
+            rules={[
+              { required: true, message: "Hãy chọn hình ảnh cho danh mục!" },
+            ]}
+          >
+            <Upload
+              showUploadList={true}
+              // listType="picture-card"
+              beforeUpload={(file) => {
+                setFile(file);
+                return false;
+              }}
+            >
+              <div className="flex justify-center items-center w-[100px] h-[100px] border border-dashed rounded-lg hover:cursor-pointer hover:border-blue-400 hover:bg-white transition-all ease-in duration-150">
+                <AiOutlinePlus size={"20px"} />
+              </div>
+            </Upload>
           </Form.Item>
         </Form>
       </Modal>

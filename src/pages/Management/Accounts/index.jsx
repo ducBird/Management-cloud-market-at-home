@@ -9,14 +9,10 @@ import {
   Checkbox,
   Modal,
   message,
-  Space,
   Select,
-  Upload,
 } from "antd";
 
-import { AiFillEdit, AiFillDelete, AiOutlinePlus } from "react-icons/ai";
-import axios from "axios";
-import moment from "moment";
+import { AiFillEdit, AiFillDelete } from "react-icons/ai";
 
 function Accounts() {
   const [accounts, setAccounts] = useState([]);

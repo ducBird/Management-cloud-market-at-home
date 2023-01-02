@@ -1,9 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { axiosClient } from '../../../libraries/axiosClient';
-import { Table, Button, Popconfirm, Form, Input, Modal, message } from 'antd';
-import { AiFillEdit, AiFillDelete } from 'react-icons/ai';
-import './suppliers.css';
-import moment from 'moment';
+import React, { useEffect, useState } from "react";
+import { axiosClient } from "../../../libraries/axiosClient";
+import { Table, Button, Popconfirm, Form, Input, Modal, message } from "antd";
+import {
+  AiFillEdit,
+  AiFillDelete,
+  AiOutlineUpload,
+  AiOutlinePlus,
+  AiOutlineLoading,
+  AiFillQuestionCircle,
+} from "react-icons/ai";
+import "./suppliers.css";
+import moment from "moment";
 
 function Suppliers() {
   const [suppliers, setSuppliers] = useState([]);
@@ -13,29 +20,29 @@ function Suppliers() {
 
   const columns = [
     {
-      title: 'Tên Nhà Cung Cấp',
-      dataIndex: 'name',
-      key: 'name',
+      title: "Tên Nhà Cung Cấp",
+      dataIndex: "name",
+      key: "name",
     },
     {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
     },
     {
-      title: 'SĐT',
-      dataIndex: 'phoneNumber',
-      key: 'phoneNumber',
+      title: "SĐT",
+      dataIndex: "phoneNumber",
+      key: "phoneNumber",
     },
     {
-      title: 'Địa Chỉ',
-      dataIndex: 'address',
-      key: 'address',
+      title: "Địa Chỉ",
+      dataIndex: "address",
+      key: "address",
     },
     {
-      title: '',
-      key: 'actions',
-      width: '1%',
+      title: "",
+      key: "actions",
+      width: "1%",
       render: (text, record) => {
         return (
           <div className="flex gap-5">
@@ -48,29 +55,33 @@ function Suppliers() {
                 setEditFormVisible(true);
               }}
             >
-              {<AiFillEdit size={'16px'} />}
+              {<AiFillEdit size={"16px"} />}
             </Button>
             {/* Button Delete */}
             <Popconfirm
-              title="Are you sure to delete this task?"
+              icon={
+                <AiFillQuestionCircle size={"24px"} className="text-red-600" />
+              }
+              title="Bạn có chắc muốn xóa nhà cung cấp này không?"
               onConfirm={() => {
                 const id = record._id;
                 axiosClient
-                  .delete('/suppliers/' + id)
+                  .delete("/suppliers/" + id)
                   .then((response) => {
-                    message.success('Deleted Successfully');
+                    message.success("Xóa thành công!");
                     setRefresh((f) => f + 1);
                   })
-                  .catch((errors) => {
-                    message.error('Deleted Failed');
+                  .catch((err) => {
+                    console.log(err);
+                    message.error("Xóa thất bại!");
                   });
               }}
               onCancel={() => {}}
-              okText="Yes"
-              cancelText="No"
+              okText="Có"
+              cancelText="Không"
             >
               <Button className="py-5 flex items-center" danger>
-                {<AiFillDelete size={'16px'} />}
+                {<AiFillDelete size={"16px"} />}
               </Button>
             </Popconfirm>
           </div>
@@ -80,43 +91,43 @@ function Suppliers() {
   ];
 
   useEffect(() => {
-    axiosClient.get('/suppliers').then((response) => {
+    axiosClient.get("/suppliers").then((response) => {
       setSuppliers(response.data);
     });
   }, [refresh]);
 
   const onFinish = (values) => {
     axiosClient
-      .post('/suppliers', values)
+      .post("/suppliers", values)
       .then((response) => {
-        message.success('Successfully Added');
+        message.success("Successfully Added");
         createForm.resetFields(); //reset input form
         setRefresh((f) => f + 1);
       })
       .catch((err) => {
-        message.error('Added Failed');
+        message.error("Added Failed");
       });
-    console.log('👌👌👌', values);
+    console.log("👌👌👌", values);
   };
   const onFinishFailed = (errors) => {
-    console.log('💣💣💣 ', errors);
+    console.log("💣💣💣 ", errors);
   };
   const onUpdateFinish = (values) => {
     axiosClient
-      .patch('/suppliers/' + selectedRecord._id, values)
+      .patch("/suppliers/" + selectedRecord._id, values)
       .then((response) => {
-        message.success('Successfully Updated!');
+        message.success("Successfully Updated!");
         updateForm.resetFields();
         setRefresh((f) => f + 1);
         setEditFormVisible(false);
       })
       .catch((err) => {
-        message.error('Updated Failed!');
+        message.error("Updated Failed!");
       });
   };
 
   const onUpdateFinishFailed = (errors) => {
-    console.log('🐣', errors);
+    console.log("🐣", errors);
   };
 
   const [createForm] = Form.useForm();
@@ -140,7 +151,7 @@ function Suppliers() {
           className=""
           label="Tên nhà cung cấp"
           name="name"
-          rules={[{ required: true, message: 'Please input your first name!' }]}
+          rules={[{ required: true, message: "Please input your first name!" }]}
         >
           <Input />
         </Form.Item>
@@ -152,8 +163,8 @@ function Suppliers() {
           label="Email"
           name="email"
           rules={[
-            { required: true, message: 'Please input your email!' },
-            { type: 'email', message: `Invalid Email` },
+            { required: true, message: "Please input your email!" },
+            { type: "email", message: `Invalid Email` },
           ]}
         >
           <Input />
@@ -166,7 +177,7 @@ function Suppliers() {
           label="Số điện thoại"
           name="phoneNumber"
           rules={[
-            { required: true, message: 'Please input your phone number!' },
+            { required: true, message: "Please input your phone number!" },
           ]}
         >
           <Input />
@@ -178,7 +189,7 @@ function Suppliers() {
           className=""
           label="Địa chỉ"
           name="address"
-          rules={[{ required: true, message: 'Please input your address!' }]}
+          rules={[{ required: true, message: "Please input your address!" }]}
         >
           <Input />
         </Form.Item>
@@ -222,7 +233,7 @@ function Suppliers() {
             label="Tên nhà cung cấp"
             name="name"
             rules={[
-              { required: true, message: 'Please input your first name!' },
+              { required: true, message: "Please input your first name!" },
             ]}
           >
             <Input />
@@ -235,8 +246,8 @@ function Suppliers() {
             label="Email"
             name="email"
             rules={[
-              { required: true, message: 'Please input your email!' },
-              { type: 'email', message: `Invalid Email` },
+              { required: true, message: "Please input your email!" },
+              { type: "email", message: `Invalid Email` },
             ]}
           >
             <Input />
@@ -249,7 +260,7 @@ function Suppliers() {
             label="Số điện thoại"
             name="phoneNumber"
             rules={[
-              { required: true, message: 'Please input your phone number!' },
+              { required: true, message: "Please input your phone number!" },
             ]}
           >
             <Input />
@@ -261,7 +272,7 @@ function Suppliers() {
             className=""
             label="Địa chỉ"
             name="address"
-            rules={[{ required: true, message: 'Please input your address!' }]}
+            rules={[{ required: true, message: "Please input your address!" }]}
           >
             <Input />
           </Form.Item>

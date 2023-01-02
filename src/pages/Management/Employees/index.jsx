@@ -8,6 +8,7 @@ import {
   Form,
   Input,
   InputNumber,
+  Checkbox,
   Modal,
   message,
   Select,
@@ -16,10 +17,13 @@ import {
 import {
   AiFillEdit,
   AiFillDelete,
-  AiFillQuestionCircle,
   AiOutlineUpload,
+  AiOutlinePlus,
+  AiOutlineLoading,
+  AiFillQuestionCircle,
 } from "react-icons/ai";
 import "./employees.css";
+import axios from "axios";
 import moment from "moment";
 
 function Employees() {
@@ -27,6 +31,20 @@ function Employees() {
   const [refresh, setRefresh] = useState(0);
   const [editFormVisible, setEditFormVisible] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [file, setFile] = useState();
+
+  const renderRoles = (arr) => {
+    return arr.map((a, index) => {
+      return (
+        <div
+          key={index}
+          className="border border-solid border-blue-800 rounded mb-1 text-center"
+        >
+          {a}
+        </div>
+      );
+    });
+  };
 
   const columns = [
     {
@@ -63,16 +81,31 @@ function Employees() {
       key: "phoneNumber",
     },
     {
-      title: "Địa Chỉ",
-      dataIndex: "address",
-      key: "address",
-    },
-    {
       title: "Ngày Sinh",
       dataIndex: "birthDay",
       key: "birthDay",
       render: (text) => {
         return <span>{moment(text).format("DD/MM/yyyy")}</span>;
+      },
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "active",
+      key: "active",
+      render: (text) => {
+        return text ? (
+          <span className="text-green-700 font-bold">Kích hoạt</span>
+        ) : (
+          <span className="text-red-700 font-bold">Thu hồi</span>
+        );
+      },
+    },
+    {
+      title: "Quyền tài khoản",
+      dataIndex: "roles",
+      key: "roles",
+      render: (text, record) => {
+        return renderRoles(text);
       },
     },
     {
@@ -87,23 +120,17 @@ function Employees() {
               showUploadList={false}
               name="file"
               data={{ name: "uploads file image employee" }}
-              action={
-                "http://localhost:9000/upload-employees/employees/" + record._id
-              }
+              action={`${API_URL}/upload-image/employees/${record._id}`}
               headers={{ authorization: "authorization-text" }}
               onChange={(info) => {
                 if (info.file.status !== "uploading") {
                   console.log(info.file, info.fileList);
                 }
-
                 if (info.file.status === "done") {
-                  message.success(
-                    `${info.file.name} file uploaded successfully`
-                  );
+                  message.success(`${info.file.name} file tải lên thành công`);
                   setRefresh((f) => f + 1);
-                  console.log("refresh", refresh);
                 } else if (info.file.status === "error") {
-                  message.error(`${info.file.name} file upload failed.`);
+                  message.error(`${info.file.name} file tải lên thất bại.`);
                 }
               }}
             >
@@ -125,22 +152,26 @@ function Employees() {
             </Button>
             {/* Button Delete */}
             <Popconfirm
-              title="Are you sure to delete this task?"
+              icon={
+                <AiFillQuestionCircle size={"24px"} className="text-red-600" />
+              }
+              title="Bạn có chắc muốn xóa nhân viên này không?"
               onConfirm={() => {
                 const id = record._id;
                 axiosClient
                   .delete("/employees/" + id)
                   .then((response) => {
-                    message.success("Deleted Successfully");
+                    message.success("Xóa thành công!");
                     setRefresh((f) => f + 1);
                   })
-                  .catch((errors) => {
-                    message.error("Deleted Failed");
+                  .catch((err) => {
+                    console.log(err);
+                    message.error("Xóa thất bại!");
                   });
               }}
               onCancel={() => {}}
-              okText="Yes"
-              cancelText="No"
+              okText="Có"
+              cancelText="Không"
             >
               <Button className="py-5 flex items-center" danger>
                 {<AiFillDelete size={"16px"} />}
@@ -162,29 +193,55 @@ function Employees() {
     axiosClient
       .post("/employees", values)
       .then((response) => {
-        message.success("Successfully Added");
-        createForm.resetFields(); //reset input form
-        setRefresh((f) => f + 1);
+        //UPLOAD FILE
+        const { _id } = response.data;
+        const formData = new FormData();
+        formData.append("file", file);
+        axios
+          .post(`${API_URL}/upload-image/employees/${_id}`, formData)
+          .then((response) => {
+            // message.success("Tải lên hình ảnh thành công!");
+            createForm.resetFields();
+            setRefresh((f) => f + 1);
+          })
+          .catch((err) => {
+            message.error("Tải lên hình ảnh thất bại!");
+          });
+        message.success("Thêm thành công!");
       })
       .catch((err) => {
-        message.error("Added Failed");
+        message.error("Thêm thất bại!");
+        console.log(err);
       });
     console.log("👌👌👌", values);
   };
+
   const onFinishFailed = (errors) => {
     console.log("💣💣💣 ", errors);
   };
+
   const onUpdateFinish = (values) => {
     axiosClient
       .patch("/employees/" + selectedRecord._id, values)
       .then((response) => {
-        message.success("Successfully Updated!");
-        updateForm.resetFields();
-        setRefresh((f) => f + 1);
-        setEditFormVisible(false);
+        const { _id } = response.data;
+        const formData = new FormData();
+        formData.append("file", file);
+        axios
+          .post(`${API_URL}/upload-image/employees/${_id}`, formData)
+          .then((response) => {
+            message.success("Cập nhật thành công!");
+            updateForm.resetFields();
+            setRefresh((f) => f + 1);
+            setEditFormVisible(false);
+          })
+          .catch((err) => {
+            message.error("Tải lên hình ảnh thất bại!");
+          });
       })
       .catch((err) => {
-        message.error("Updated Failed!");
+        message.error("Cập nhật thất bại!");
+        console.log(err);
       });
   };
 
@@ -248,6 +305,17 @@ function Employees() {
             <Input />
           </Form.Item>
 
+          {/* Password */}
+          <Form.Item
+            hasFeedback
+            className=""
+            label="Mật khẩu"
+            name="password"
+            rules={[{ required: true, message: "Please input your password!" }]}
+          >
+            <Input.Password />
+          </Form.Item>
+
           {/* Phone */}
           <Form.Item
             hasFeedback
@@ -255,7 +323,9 @@ function Employees() {
             label="Số điện thoại"
             name="phoneNumber"
             rules={[
-              { required: true, message: "Please input your phone number!" },
+              { required: true, message: "Số điện thoại bắt buộc nhập!" },
+              { min: 10, message: "Số điện thoại không quá 10 chữ số!" },
+              { max: 10, message: "Số điện thoại không quá 10 chữ số!" },
             ]}
           >
             <Input />
@@ -277,6 +347,66 @@ function Employees() {
             <Input />
           </Form.Item>
 
+          <Form.Item label="Trạng thái" name="active">
+            <Select
+              // defaultValue={true}
+              options={[
+                {
+                  value: "true",
+                  label: "Kích hoạt",
+                },
+                {
+                  value: "false",
+                  label: "Thu hồi",
+                },
+              ]}
+            />
+          </Form.Item>
+
+          <Form.Item label="Quyền tài khoản" name="roles">
+            <Checkbox.Group
+              options={[
+                {
+                  label: "administrator",
+                  value: "administrator",
+                },
+                {
+                  label: "managers",
+                  value: "managers",
+                },
+                {
+                  label: "directors",
+                  value: "directors",
+                },
+                {
+                  label: "personnel",
+                  value: "personnel",
+                },
+              ]}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Hình ảnh"
+            name="file"
+            rules={[
+              { required: true, message: "Hãy chọn hình ảnh cho nhân viên!" },
+            ]}
+          >
+            <Upload
+              showUploadList={true}
+              // listType="picture-card"
+              beforeUpload={(file) => {
+                setFile(file);
+                return false;
+              }}
+            >
+              <div className="flex justify-center items-center w-[100px] h-[100px] border border-dashed rounded-lg hover:cursor-pointer hover:border-blue-400 hover:bg-white transition-all ease-in duration-150">
+                <AiOutlinePlus size={"20px"} />
+              </div>
+            </Upload>
+          </Form.Item>
+
           {/* Button Save */}
           <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
             <Button type="primary" htmlType="submit">
@@ -290,6 +420,7 @@ function Employees() {
       <Modal
         centered
         open={editFormVisible}
+        width={"50%"}
         title="Cập nhật thông tin nhân viên"
         onOk={() => {
           updateForm.submit();
@@ -350,6 +481,17 @@ function Employees() {
             <Input />
           </Form.Item>
 
+          {/* Password */}
+          <Form.Item
+            hasFeedback
+            className=""
+            label="Mật khẩu"
+            name="password"
+            rules={[{ required: true, message: "Please input your password!" }]}
+          >
+            <Input.Password />
+          </Form.Item>
+
           {/* Phone */}
           <Form.Item
             hasFeedback
@@ -377,6 +519,66 @@ function Employees() {
           {/* BirthDay */}
           <Form.Item hasFeedback className="" label="Ngày Sinh" name="birthDay">
             <Input />
+          </Form.Item>
+
+          <Form.Item label="Trạng thái" name="active">
+            <Select
+              // defaultValue={true}
+              options={[
+                {
+                  value: "true",
+                  label: "Kích hoạt",
+                },
+                {
+                  value: "false",
+                  label: "Thu hồi",
+                },
+              ]}
+            />
+          </Form.Item>
+
+          <Form.Item label="Quyền tài khoản" name="roles">
+            <Checkbox.Group
+              options={[
+                {
+                  label: "administrator",
+                  value: "administrator",
+                },
+                {
+                  label: "managers",
+                  value: "managers",
+                },
+                {
+                  label: "directors",
+                  value: "directors",
+                },
+                {
+                  label: "personnel",
+                  value: "personnel",
+                },
+              ]}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Hình ảnh"
+            name="file"
+            rules={[
+              { required: true, message: "Hãy chọn hình ảnh cho nhân viên!" },
+            ]}
+          >
+            <Upload
+              showUploadList={true}
+              // listType="picture-card"
+              beforeUpload={(file) => {
+                setFile(file);
+                return false;
+              }}
+            >
+              <div className="flex justify-center items-center w-[100px] h-[100px] border border-dashed rounded-lg hover:cursor-pointer hover:border-blue-400 hover:bg-white transition-all ease-in duration-150">
+                <AiOutlinePlus size={"20px"} />
+              </div>
+            </Upload>
           </Form.Item>
         </Form>
       </Modal>
