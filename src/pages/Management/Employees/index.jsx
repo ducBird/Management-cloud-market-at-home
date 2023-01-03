@@ -224,20 +224,10 @@ function Employees() {
     axiosClient
       .patch("/employees/" + selectedRecord._id, values)
       .then((response) => {
-        const { _id } = response.data;
-        const formData = new FormData();
-        formData.append("file", file);
-        axios
-          .post(`${API_URL}/upload-image/employees/${_id}`, formData)
-          .then((response) => {
-            message.success("Cập nhật thành công!");
-            updateForm.resetFields();
-            setRefresh((f) => f + 1);
-            setEditFormVisible(false);
-          })
-          .catch((err) => {
-            message.error("Tải lên hình ảnh thất bại!");
-          });
+        message.success("Cập nhật thành công!");
+        updateForm.resetFields();
+        setRefresh((f) => f + 1);
+        setEditFormVisible(false);
       })
       .catch((err) => {
         message.error("Cập nhật thất bại!");
@@ -558,27 +548,6 @@ function Employees() {
                 },
               ]}
             />
-          </Form.Item>
-
-          <Form.Item
-            label="Hình ảnh"
-            name="file"
-            rules={[
-              { required: true, message: "Hãy chọn hình ảnh cho nhân viên!" },
-            ]}
-          >
-            <Upload
-              showUploadList={true}
-              // listType="picture-card"
-              beforeUpload={(file) => {
-                setFile(file);
-                return false;
-              }}
-            >
-              <div className="flex justify-center items-center w-[100px] h-[100px] border border-dashed rounded-lg hover:cursor-pointer hover:border-blue-400 hover:bg-white transition-all ease-in duration-150">
-                <AiOutlinePlus size={"20px"} />
-              </div>
-            </Upload>
           </Form.Item>
         </Form>
       </Modal>

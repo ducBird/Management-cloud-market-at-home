@@ -55,13 +55,13 @@ axiosClient.interceptors.response.use(
         // Trường hợp không có token thì chuyển sang trang LOGIN
         const token = window.localStorage.getItem("token");
         if (!token) {
-          // window.location.href = "/account";
+          window.location.href = "/";
           return Promise.reject(error);
         }
 
         const refreshToken = window.localStorage.getItem("refreshToken");
         if (refreshToken) {
-          const response = await axiosClient.post("/auth/refresh-token", {
+          const response = await axiosClient.post("/employees/refresh-token", {
             refreshToken: refreshToken,
           });
 

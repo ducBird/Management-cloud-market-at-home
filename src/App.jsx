@@ -79,9 +79,12 @@ function App() {
                     <Route path="/" element={<Login />} />
                   )}
 
+                  {/* HOME */}
                   <Route path="/home" element={<HomePage />} />
+
                   {/* LOGIN */}
                   <Route path="/account" element={<Login />} />
+
                   {/* MANAGEMENT */}
                   <Route path="/management/accounts" element={<Accounts />} />
 

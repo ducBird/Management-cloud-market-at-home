@@ -4,18 +4,18 @@ import { axiosClient } from "../../libraries/axiosClient";
 
 export default function Login() {
   const onFinish = (values) => {
-    const { username, password } = values;
+    const { email, password } = values;
     axiosClient
-      .post("/auth/login-jwt", { username, password })
+      .post("/employees/login-jwt", { email, password })
       .then((response) => {
-        window.location.href = "/home";
+        window.location.href = "/";
         // console.log(response.data);
         // console.log(values);
-        // console.log(username);
+        // console.log(email);
         // console.log(values.password);
 
         // axiosClient
-        //   .get(`/auth/${response.data._id}`)
+        //   .get(`/employees/${response.data._id}`)
         //   .then((res) => {
         //     // console.log(res.data);
         //   })
@@ -41,14 +41,14 @@ export default function Login() {
         name="login-form"
         labelCol={{ span: 8 }}
         wrapperCol={{ span: 8 }}
-        initialValues={{ username: "", password: "", remember: true }}
+        initialValues={{ email: "", password: "", remember: true }}
         onFinish={onFinish}
         onFinishFailed={onFinishFailed}
         autoComplete="off"
       >
         <Form.Item
           label="Email"
-          name="username"
+          name="email"
           rules={[
             { required: true, message: "Email không thể để trống" },
             { type: "email", message: "Đây không phải là một email" },
