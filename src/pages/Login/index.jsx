@@ -1,27 +1,30 @@
 import React, { useEffect } from "react";
 import { Input, Button, Divider, Form, Checkbox, message } from "antd";
 import { axiosClient } from "../../libraries/axiosClient";
+import { useUser } from "../../hooks/useUser";
 
 export default function Login() {
+  const { addUser } = useUser((state) => state);
+
   const onFinish = (values) => {
     const { email, password } = values;
     axiosClient
       .post("/employees/login-jwt", { email, password })
       .then((response) => {
-        window.location.href = "/";
         // console.log(response.data);
         // console.log(values);
         // console.log(email);
         // console.log(values.password);
-
-        // axiosClient
-        //   .get(`/employees/${response.data._id}`)
-        //   .then((res) => {
-        //     // console.log(res.data);
-        //   })
-        //   .catch((err) => {
-        //     console.log(err);
-        //   });
+        axiosClient
+          .get(`/employees/${response.data._id}`)
+          .then((res) => {
+            // console.log(res.data);
+            addUser(res.data);
+            window.location.href = "/";
+          })
+          .catch((err) => {
+            console.log(err);
+          });
       })
       .catch((err) => {
         if (err.response.status === 401) {

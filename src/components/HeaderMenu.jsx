@@ -10,6 +10,8 @@ import {
 import { MdOutlineManageAccounts } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import cmah_logo from "../../public/cloud-market.jpg";
+import { useUser } from "../hooks/useUser";
+import { API_URL } from "../constants/URLS";
 
 const items1 = [
   { label: "Home", key: "home", icon: <AiOutlineHome /> }, // remember to pass the key prop
@@ -23,6 +25,7 @@ const items1 = [
 
 export default function HeaderMenu() {
   const navigate = useNavigate();
+  const { users } = useUser((state) => state);
 
   const ButtonLogin = (
     <button
@@ -37,9 +40,16 @@ export default function HeaderMenu() {
   );
   const ButtonLogout = (
     <div className="flex items-center gap-10">
-      <div className="flex items-center gap-5 text-white leading-none p-2 border border-solid rounded-md">
-        <AiOutlineUser />
-        <span>{"...username..."}</span>
+      <div className="flex justify-center items-center gap-2 text-white leading-none p-2 border border-solid rounded-md hover:cursor-pointer">
+        {/* <AiOutlineUser /> */}
+        <div className="w-[20px] h-[20px]">
+          <img
+            src={`${API_URL}${users.avatar}`}
+            alt="avatar"
+            className="w-[100%] h-[100%] rounded-full"
+          />
+        </div>
+        <span>{users.fullName}</span>
       </div>
       <button
         onClick={() => {

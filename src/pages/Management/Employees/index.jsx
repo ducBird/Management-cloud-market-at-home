@@ -25,13 +25,16 @@ import {
 import "./employees.css";
 import axios from "axios";
 import moment from "moment";
+import { useUser } from "../../../hooks/useUser";
 
 function Employees() {
   const [employees, setEmployees] = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [refresh, setRefresh] = useState(0);
   const [editFormVisible, setEditFormVisible] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [file, setFile] = useState();
+  const { users } = useUser((state) => state);
 
   const renderRoles = (arr) => {
     return arr.map((a, index) => {
@@ -45,6 +48,11 @@ function Employees() {
       );
     });
   };
+
+  let AUTHORIZATION = [];
+  const DIRECTORS_AUTHOR = ["administrator", "managers", "personnel"];
+  const ADMINISTRATOR_AUTHOR = ["directors", "managers", "personnel"];
+  const MANAGERS_AUTHOR = ["personnel"];
 
   const columns = [
     {
@@ -184,8 +192,23 @@ function Employees() {
   ];
 
   useEffect(() => {
+    users.roles.includes("directors")
+      ? (AUTHORIZATION = DIRECTORS_AUTHOR)
+      : users.roles.includes("administrator")
+      ? (AUTHORIZATION = ADMINISTRATOR_AUTHOR)
+      : (AUTHORIZATION = MANAGERS_AUTHOR);
+    // console.log(AUTHORIZATION);
+
     axiosClient.get("/employees").then((response) => {
-      setEmployees(response.data);
+      const employeesFilter = response.data.filter((e) => {
+        // console.log(JSON.stringify(e.roles));
+        // console.log(DIRECTORS_AUTHOR.join(""));
+        return e.roles.every((role) => {
+          // console.log(role);
+          return AUTHORIZATION.includes(role);
+        });
+      });
+      setEmployees(employeesFilter);
     });
   }, [refresh]);
 
@@ -405,6 +428,7 @@ function Employees() {
           </Form.Item>
         </div>
       </Form>
+
       <Table rowKey="_id" dataSource={employees} columns={columns} />
 
       <Modal

@@ -13,7 +13,7 @@ import HomePage from "./pages/Home/HomePage";
 import Categories from "./pages/Management/Categories";
 import Products from "./pages/Management/Products";
 
-import { Layout, Menu } from "antd";
+import { Layout, message, Menu } from "antd";
 import Employees from "./pages/Management/Employees";
 import Customers from "./pages/Management/Customers";
 import Suppliers from "./pages/Management/Suppliers";
@@ -22,8 +22,11 @@ import Login from "./pages/Login";
 import Accounts from "./pages/Management/Accounts";
 import GuestService from "./pages/Management/GuestServices";
 
+import { useUser } from "./hooks/useUser";
+
 const { Header, Content, Sider } = Layout;
 function App() {
+  const { users } = useUser((state) => state);
   return (
     <div className="App">
       <BrowserRouter>
@@ -87,8 +90,22 @@ function App() {
 
                   {/* MANAGEMENT */}
                   <Route path="/management/accounts" element={<Accounts />} />
-
-                  <Route path="/management/employees" element={<Employees />} />
+                  {users.roles === undefined ? (
+                    <Route path="/" element={<Login />} />
+                  ) : users.roles.some((role) => {
+                      return (
+                        role === "directors" ||
+                        role === "administrator" ||
+                        role === "managers"
+                      );
+                    }) ? (
+                    <Route
+                      path="/management/employees"
+                      element={<Employees />}
+                    />
+                  ) : (
+                    <Route path="*" element={<div>Not found</div>} />
+                  )}
                   <Route
                     path="/management/categories"
                     element={<Categories />}
