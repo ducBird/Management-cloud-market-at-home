@@ -66,7 +66,11 @@ export default function Orders() {
       render: (text, record) => {
         return (
           <div style={{ textAlign: "right" }}>
-            {numeral(record?.product?.price).format("0,0$")}
+            {numeral(
+              record?.product?.discount
+                ? record?.product?.total
+                : record?.product?.price
+            ).format("0,0$")}
           </div>
         );
       },
@@ -206,18 +210,18 @@ export default function Orders() {
             />
             {/* delete */}
             <Popconfirm
-              title="Bạn có muốn xóa không"
+              title="Bạn có muốn hủy đơn hàng không"
               onConfirm={() => {
                 //delete
                 const id = record._id;
                 axiosClient
                   .delete("/orders/" + id)
                   .then((response) => {
-                    message.success("Xóa thành công");
+                    message.success("Hủy đơn hàng thành công");
                     setRefresh((pre) => pre + 1);
                   })
                   .catch((err) => {
-                    message.error("Xóa thất bại");
+                    message.error("Hủy đơn hàng thất bại");
                   });
                 console.log("delete", record);
               }}
@@ -308,7 +312,10 @@ export default function Orders() {
             className=""
             label="Ngày tạo"
             name="createdDate"
-            rules={[{ required: true }]}
+            rules={[
+              { required: true, message: "Không thể để trống" },
+              { type: "date", message: "Ngày không hợp lệ" },
+            ]}
           >
             <Input />
           </Form.Item>
@@ -320,17 +327,20 @@ export default function Orders() {
             label="Ngày giao"
             name="shippedDate"
             rules={[
-              { required: true, type: "Date", message: "Invalid datetime" },
-              // {
-              //   validator: function (value) {
-              //     if (!value) return true;
-              //     if (value < createDate) {
-              //       return false;
-              //     }
-              //     return true;
-              //   },
-              //   message: `Shipped date: {VALUE} < Created Date!`,
-              // },
+              { required: true, message: "Không thể để trống" },
+              { type: "date", message: "Ngày không hợp lệ" },
+              {
+                validate: {
+                  validator: function (value) {
+                    if (!value) return true;
+                    if (value < createDate) {
+                      return false;
+                    }
+                    return true;
+                  },
+                  message: "Ngày giao phải nhỏ hơn ngày hiện tại",
+                },
+              },
             ]}
           >
             <Input value={Date.now()} />
@@ -343,7 +353,7 @@ export default function Orders() {
             label="Trạng thái đơn hàng"
             name="status"
             rules={[
-              { required: true, message: "Please select status!" },
+              { required: true, message: "Không thể để trống" },
               {
                 validate: {
                   validator: (value) => {
@@ -387,9 +397,7 @@ export default function Orders() {
             className=""
             label="Địa chỉ giao hàng"
             name="shippingAddress"
-            rules={[
-              { required: true, message: "Please input Shipping Address!" },
-            ]}
+            rules={[{ required: true, message: "Không thể để trống" }]}
           >
             <Input />
           </Form.Item>
@@ -400,7 +408,7 @@ export default function Orders() {
             className=""
             label="Hình thức thanh toán"
             name="paymentType"
-            rules={[{ required: true, message: "Please select payment type!" }]}
+            rules={[{ required: true, message: "Không thể để trống" }]}
           >
             <Select
               options={[
@@ -421,7 +429,7 @@ export default function Orders() {
             className=""
             label="Khách hàng"
             name="fullName"
-            rules={[{ required: true, message: "Please selected customer!" }]}
+            rules={[{ required: true, message: "Không thể để trống" }]}
           >
             <Input />
           </Form.Item>
@@ -430,7 +438,7 @@ export default function Orders() {
             className=""
             label="Số điện thoại"
             name="phoneNumber"
-            rules={[{ required: true, message: "Please selected customer!" }]}
+            rules={[{ required: true, message: "Không thể để trống" }]}
           >
             <Input />
           </Form.Item>
@@ -439,7 +447,7 @@ export default function Orders() {
             className=""
             label="Nhân viên"
             name="employeeId"
-            rules={[{ required: true, message: "Please selected suplier!" }]}
+            rules={[{ required: true, message: "Không thể để trống" }]}
           >
             <Select
               options={
@@ -618,17 +626,20 @@ export default function Orders() {
               label="Ngày giao"
               name="shippedDate"
               rules={[
-                { required: false, type: "Date", message: "Invalid datetime" },
-                // {
-                //   validator: function (value) {
-                //     if (!value) return true;
-                //     if (value < createDate) {
-                //       return false;
-                //     }
-                //     return true;
-                //   },
-                //   message: `Shipped date: {VALUE} < Created Date!`,
-                // },
+                { required: true, type: "Date", message: "Không để trống" },
+                { type: "date", message: "Ngày không hợp lệ" },
+                {
+                  validate: {
+                    validator: function (value) {
+                      if (!value) return true;
+                      if (value < createDate) {
+                        return false;
+                      }
+                      return true;
+                    },
+                    message: "Ngày giao phải nhỏ hơn ngày hiện tại",
+                  },
+                },
               ]}
             >
               <Input value={Date.now()} />
