@@ -331,7 +331,7 @@ export default function Orders() {
               { type: "date", message: "Ngày không hợp lệ" },
               {
                 validate: {
-                  validator: function (value) {
+                  validator: async (rule, value) => {
                     if (!value) return true;
                     if (value < createDate) {
                       return false;
@@ -355,15 +355,14 @@ export default function Orders() {
             rules={[
               { required: true, message: "Không thể để trống" },
               {
-                validate: {
-                  validator: (value) => {
-                    if (["WAITING", "COMPLETED", "CANCELED"].includes(value)) {
-                      return true;
-                    } else {
-                      return false;
-                    }
-                  },
-                  message: `status: {status} is invalid`,
+                validator: (_, value) => {
+                  console.log(value);
+
+                  if (["WAITING", "COMPLETED", "CANCELED"].includes(value)) {
+                    return Promise.resolve();
+                  } else {
+                    return Promise.reject("Not valid status");
+                  }
                 },
               },
             ]}
@@ -381,6 +380,10 @@ export default function Orders() {
                 {
                   value: "CANCELED",
                   label: "CANCELED",
+                },
+                {
+                  value: "A",
+                  label: "A",
                 },
               ]}
             />
