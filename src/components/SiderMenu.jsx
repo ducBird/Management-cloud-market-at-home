@@ -124,27 +124,58 @@ export default function SiderMenu() {
       icon: <AiOutlineDatabase />,
       children: [
         {
-          label: "Orders",
+          label: "Đơn hàng",
           key: "orders",
           icon: <MdOutlineArticle />,
           children: [
             {
-              label: <span style={{}}>Order statistics by status</span>,
-              key: "orders-status",
+              label: "Thống kê đơn hàng theo danh mục",
+              key: "sales-orders-statistics-category",
             },
             {
-              label: "Statistics by payment method",
-              key: "orders-payment",
+              label: "Thống kê tổng đơn hàng theo tháng",
+              key: "sales-total-orders-statistics-month",
             },
             {
-              label: "Order statistics by revenue",
+              label: "Thống kê đơn hàng theo trạng thái",
+              key: "sales-orders-status",
+            },
+            {
+              label: "Thống kê theo phương thức thanh toán",
+              key: "sales-orders-payment",
+            },
+            {
+              label: "Tìm kiếm đơn hàng theo số điện thoại",
+              key: "sales-orders-phoneNumber",
+            },
+            {
+              label: "Thống kê đơn hàng theo ngày",
+              key: "sales-orders-date",
+            },
+            {
+              label: "Thống kê đơn hàng theo doanh thu",
               key: "orders-revenue",
               children: [
                 {
-                  label: "Revenue statistics over time",
-                  key: "orders-revenue-overtime",
+                  label: "Thống kê doanh thu theo tổng đơn hàng",
+                  key: "orders-statistics-by-total",
                 },
               ],
+            },
+          ],
+        },
+        {
+          label: "Khách hàng",
+          key: "customers",
+          icon: <MdOutlineArticle />,
+          children: [
+            {
+              label: "Thống kê theo địa chỉ khách hàng",
+              key: "sales-statistics-orders-customers-address",
+            },
+            {
+              label: "Thống kê sinh nhật khách hàng",
+              key: "sales-customers-birthday",
             },
           ],
         },
@@ -160,13 +191,13 @@ export default function SiderMenu() {
   return (
     <div>
       <Menu
-        theme="light"
-        mode="inline"
-        style={{
-          height: "100%",
-          borderRight: 0,
-        }}
-        // inlineCollapsed={collapsed}
+        // theme="light"
+        // mode="inline"
+        // style={{
+        //   height: "100%",
+        //   borderRight: 0,
+        // }}
+        //inlineCollapsed={collapsed}
         items={itemsSider}
         onClick={({ key, keyPath, domEvent }) => {
           navigate("/" + key.split("-").join("/"));

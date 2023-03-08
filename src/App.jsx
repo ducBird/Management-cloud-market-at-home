@@ -23,6 +23,14 @@ import Accounts from "./pages/Management/Accounts";
 import GuestService from "./pages/Management/GuestServices";
 
 import { useUser } from "./hooks/useUser";
+import SearchOrdersByStatus from "./pages/Sales/Orders/SearchOrdersByStatus";
+import SearchOrdersByPaymentType from "./pages/Sales/Orders/SearchOrdersByPaymentType";
+import SearchOrdersByPhoneNumber from "./pages/Sales/Orders/SearchOrdersByPhoneNumber";
+import SearchOrderByDate from "./pages/Sales/Orders/SearchOrderByDate";
+import StatisticsOrdersByAddress from "./pages/Sales/Customes/StatisticsCustomerOrdersByAddress";
+import OrderStatisticsByCategory from "./pages/Sales/Orders/OrderStatisticsByCategory";
+import StatisticsTotalOrdersByMonth from "./pages/Sales/Orders/StatisticsTotalOrdersByMonth";
+import StatisticsByTotalOrders from "./pages/Sales/Orders/StatisticsByTotalOrders";
 
 const { Header, Content, Sider } = Layout;
 function App() {
@@ -120,8 +128,40 @@ function App() {
                   {/* SALES */}
                   <Route path="/sales/orders" element={<Orders />} />
                   <Route
-                    path="orders/status"
-                    element={<div>SearchOrdersByStatus</div>}
+                    path="sales/orders/status"
+                    element={<SearchOrdersByStatus />}
+                  />
+                  <Route
+                    path="sales/orders/payment"
+                    element={<SearchOrdersByPaymentType />}
+                  />
+                  <Route
+                    path="sales/orders/phoneNumber"
+                    element={<SearchOrdersByPhoneNumber />}
+                  />
+                  <Route
+                    path="sales/orders/date"
+                    element={<SearchOrderByDate />}
+                  />
+                  <Route
+                    path="sales/orders/statistics/category"
+                    element={<OrderStatisticsByCategory />}
+                  />
+                  {/* TK tổng đơn hàng theo tháng */}
+                  <Route
+                    path="sales/total/orders/statistics/month"
+                    element={<StatisticsTotalOrdersByMonth />}
+                  />
+                  {/* TK tổng đơn hàng */}
+                  <Route
+                    path="orders/statistics/by/total"
+                    element={<StatisticsByTotalOrders />}
+                  />
+
+                  {/* customes */}
+                  <Route
+                    path="sales/statistics/orders/customers/address"
+                    element={<StatisticsOrdersByAddress />}
                   />
                   {/* NO MATCH ROUTE */}
                   <Route

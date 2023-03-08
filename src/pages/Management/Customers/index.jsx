@@ -7,19 +7,18 @@ import {
   Popconfirm,
   Form,
   Input,
-  InputNumber,
   Checkbox,
   Select,
   Modal,
   message,
   Upload,
+  DatePicker,
 } from "antd";
 import {
   AiFillEdit,
   AiFillDelete,
   AiOutlineUpload,
   AiOutlinePlus,
-  AiOutlineLoading,
   AiFillQuestionCircle,
 } from "react-icons/ai";
 import "./customers.css";
@@ -30,12 +29,13 @@ function Customers() {
   const [customers, setCustomers] = useState([]);
   const [refresh, setRefresh] = useState(0);
   const [editFormVisible, setEditFormVisible] = useState(false);
+  const [createFormVisible, setCreateFormVisible] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [file, setFile] = useState();
-
+  const [loading, setLoading] = React.useState(false);
   const columns = [
     {
-      title: "",
+      title: "Hình ảnh",
       dataIndex: "avatar",
       key: "avatar",
       render: (text, record) => {
@@ -53,15 +53,28 @@ function Customers() {
       },
     },
     {
-      title: "Họ Và Tên",
-      dataIndex: "fullName",
-      key: "fullName",
-      width: "20%",
+      title: "Họ",
+      dataIndex: "firstName",
+      key: "firstName",
+      width: "10%",
+    },
+    {
+      title: "Tên",
+      dataIndex: "lastName",
+      key: "lastName",
+      width: "10%",
     },
     {
       title: "Email",
       dataIndex: "email",
       key: "email",
+      width: "5%",
+    },
+    {
+      title: "Địa chỉ",
+      dataIndex: "address",
+      key: "address",
+      width: "50%",
     },
     {
       title: "SĐT",
@@ -168,6 +181,7 @@ function Customers() {
   useEffect(() => {
     axiosClient.get("/customers").then((response) => {
       setCustomers(response.data);
+      console.log(response.data);
     });
   }, [refresh]);
 
@@ -183,12 +197,14 @@ function Customers() {
           .post(`${API_URL}/upload-image/customers/${_id}`, formData)
           .then((response) => {
             // message.success("Tải lên hình ảnh thành công!");
-            createForm.resetFields();
-            setRefresh((f) => f + 1);
+            // createForm.resetFields();
+            // setRefresh((f) => f + 1);
           })
           .catch((err) => {
             message.error("Tải lên hình ảnh thất bại!");
           });
+        setRefresh((f) => f + 1);
+        createForm.resetFields();
         message.success("Thêm thành công!");
       })
       .catch((err) => {
@@ -220,163 +236,323 @@ function Customers() {
   const onUpdateFinishFailed = (errors) => {
     console.log("🐣", errors);
   };
+  const onSearchFinish = (values) => {
+    setLoading(true);
+    axiosClient
+      .post("/customers/dia-chi-khach-hang", values)
+      .then((response) => {
+        setCustomers(response.data.results);
+        console.log(response.data.results);
+        setLoading(false);
+      })
+      .catch((err) => {
+        message.error("Lọc thông tin lỗi");
+        setLoading(false);
+      });
+  };
 
+  const onSearchFinishFailed = (errors) => {
+    console.log("🐣", errors);
+  };
   const [createForm] = Form.useForm();
   const [updateForm] = Form.useForm();
+  const [searchForm] = Form.useForm();
+
+  // validate
+  // validate phone number
+  const phoneValidator = (rule, value, callback) => {
+    const phoneNumberPattern =
+      /^(0?)(3[2-9]|5[6|8|9]|7[0|6-9]|8[0-6|8|9]|9[0-4|6-9])[0-9]{7}$/;
+    if (value && !phoneNumberPattern.test(value)) {
+      callback("Số điện thoại không hợp lệ");
+    } else {
+      callback();
+    }
+  };
+
+  // validate birth date
+  const dateOfBirthValidator = (rule, value, callback) => {
+    const dateFormat = "YYYY/MM/DD"; // Định dạng ngày tháng
+    const currentDate = moment(); // Lấy ngày hiện tại
+    const dateOfBirth = moment(value, dateFormat); // Chuyển đổi giá trị nhập vào thành kiểu moment
+
+    // Kiểm tra tính hợp lệ của ngày sinh
+    if (currentDate.diff(dateOfBirth, "days") < 0) {
+      callback("Ngày sinh phải nhỏ hơn ngày hiện tại");
+    } else {
+      callback();
+    }
+  };
   return (
     <>
       <h1 className="text-center p-2 mb-5 text-xl">🙆‍♂️ Quản Lý Khách Hàng 🙆‍♀️</h1>
-      <Form
-        form={createForm}
-        name="create-form"
-        labelCol={{ span: 8 }}
-        wrapperCol={{ span: 16 }}
-        initialValues={{ remember: true }}
-        onFinish={onFinish}
-        onFinishFailed={onFinishFailed}
-        autoComplete="off"
-      >
-        <div className="w-[80%]">
-          {/* FirstName */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Họ - Tên Đệm"
-            name="firstName"
-            rules={[
-              { required: true, message: "Please input your first name!" },
-            ]}
-          >
-            <Input />
-          </Form.Item>
 
-          {/* LastName */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Tên"
-            name="lastName"
-            rules={[
-              { required: true, message: "Please input your last name!" },
-            ]}
-          >
-            <Input />
-          </Form.Item>
+      {/* Form tìm kiếm */}
+      <div className="border border-solid rounded-md">
+        <p className="text-center text-primary text-[17px] font-bold">
+          Tìm kiếm
+        </p>
+        <Form
+          form={searchForm}
+          name="search-form"
+          labelCol={{ span: 8 }}
+          wrapperCol={{ span: 16 }}
+          initialValues={{ remember: true }}
+          onFinish={onSearchFinish}
+          onFinishFailed={onSearchFinishFailed}
+          autoComplete="off"
+        >
+          <div className="w-[80%]">
+            {/* fullName */}
+            <Form.Item hasFeedback className="" label="Tên" name="fullName">
+              <Input />
+            </Form.Item>
 
-          {/* Email */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Email"
-            name="email"
-            rules={[
-              { required: true, message: "Please input your email!" },
-              { type: "email", message: `Invalid Email` },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-
-          {/* Password */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Mật khẩu"
-            name="password"
-            rules={[{ required: true, message: "Please input your password!" }]}
-          >
-            <Input.Password />
-          </Form.Item>
-
-          {/* Phone */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Số điện thoại"
-            name="phoneNumber"
-            rules={[
-              { required: true, message: "Số điện thoại bắt buộc nhập!" },
-              { min: 10, message: "Số điện thoại không quá 10 chữ số!" },
-              { max: 10, message: "Số điện thoại không quá 10 chữ số!" },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-
-          {/* Address */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Địa chỉ"
-            name="address"
-            rules={[{ required: true, message: "Please input your address!" }]}
-          >
-            <Input />
-          </Form.Item>
-
-          {/* BirthDay */}
-          <Form.Item hasFeedback className="" label="Ngày Sinh" name="birthDay">
-            <Input />
-          </Form.Item>
-
-          <Form.Item label="Trạng thái" name="active">
-            <Select
-              // defaultValue={true}
-              options={[
-                {
-                  value: "true",
-                  label: "Kích hoạt",
-                },
-                {
-                  value: "false",
-                  label: "Thu hồi",
-                },
-              ]}
-            />
-          </Form.Item>
-
-          <Form.Item label="Quyền tài khoản" name="roles">
-            <Checkbox.Group
-              options={[
-                {
-                  label: "customer",
-                  value: "customer",
-                },
-              ]}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Hình ảnh"
-            name="file"
-            rules={[
-              { required: true, message: "Hãy chọn hình ảnh cho khách hàng!" },
-            ]}
-          >
-            <Upload
-              showUploadList={true}
-              // listType="picture-card"
-              beforeUpload={(file) => {
-                setFile(file);
-                return false;
-              }}
+            {/* Email */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Email"
+              name="email"
+              rules={[{ type: "email", message: "Email không hợp lệ" }]}
             >
-              <div className="flex justify-center items-center w-[100px] h-[100px] border border-dashed rounded-lg hover:cursor-pointer hover:border-blue-400 hover:bg-white transition-all ease-in duration-150">
-                <AiOutlinePlus size={"20px"} />
-              </div>
-            </Upload>
-          </Form.Item>
+              <Input />
+            </Form.Item>
 
-          {/* Button Save */}
-          <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-            <Button type="primary" htmlType="submit">
-              Lưu
-            </Button>
-          </Form.Item>
-        </div>
-      </Form>
+            {/* Phone */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Số điện thoại"
+              name="phoneNumber"
+              rules={[
+                {
+                  validator: phoneValidator,
+                },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+
+            {/* Address */}
+            <Form.Item hasFeedback className="" label="Địa chỉ" name="address">
+              <Input />
+            </Form.Item>
+
+            {/* BirthDay */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Ngày Sinh"
+              name="birthDay"
+              rules={[
+                {
+                  validator: dateOfBirthValidator,
+                },
+                { type: "date", message: "Ngày sinh không hợp lệ" },
+              ]}
+            >
+              <DatePicker format="YYYY/MM/DD" />
+            </Form.Item>
+
+            <Form.Item label="Trạng thái" name="active">
+              <Select
+                // defaultValue={true}
+                options={[
+                  {
+                    value: "true",
+                    label: "Kích hoạt",
+                  },
+                  {
+                    value: "false",
+                    label: "Thu hồi",
+                  },
+                ]}
+              />
+            </Form.Item>
+
+            {/* Button Lọc thông tin */}
+            <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+              <Button type="primary" htmlType="submit" loading={loading}>
+                {loading ? "Đang xử lý ..." : "Lọc thông tin"}
+              </Button>
+            </Form.Item>
+          </div>
+        </Form>
+      </div>
+
+      <Button
+        className="bg-blue-500 text-white font-bold mb-5 mt-5"
+        onClick={() => {
+          setCreateFormVisible(true);
+          console.log("ok");
+        }}
+      >
+        Thêm mới khách hàng
+      </Button>
+      {/* modal thêm mới */}
+      <Modal
+        centered
+        open={createFormVisible}
+        title="Thêm mới thông tin khách hàng"
+        onOk={() => {
+          createForm.submit();
+          //setCreateFormVisible(false);
+        }}
+        onCancel={() => {
+          setCreateFormVisible(false);
+        }}
+        okText="Lưu"
+        cancelText="Đóng"
+      >
+        <Form
+          form={createForm}
+          name="create-form"
+          labelCol={{ span: 8 }}
+          wrapperCol={{ span: 16 }}
+          initialValues={{ remember: true }}
+          onFinish={onFinish}
+          onFinishFailed={onFinishFailed}
+          autoComplete="off"
+        >
+          <div className="w-[80%]">
+            {/* FirstName */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Họ - Tên Đệm"
+              name="firstName"
+              rules={[{ required: true, message: "Không thể để trống" }]}
+            >
+              <Input />
+            </Form.Item>
+
+            {/* LastName */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Tên"
+              name="lastName"
+              rules={[{ required: true, message: "Không thể để trống" }]}
+            >
+              <Input />
+            </Form.Item>
+
+            {/* Email */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Email"
+              name="email"
+              rules={[
+                { required: true, message: "Không thể để trống" },
+                { type: "email", message: "Email không hợp lệ" },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+
+            {/* Password */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Mật khẩu"
+              name="password"
+              rules={[{ required: true, message: "Không thể để trống" }]}
+            >
+              <Input.Password />
+            </Form.Item>
+
+            {/* Phone */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Số điện thoại"
+              name="phoneNumber"
+              rules={[
+                { required: true, message: "Không thể để trống" },
+                {
+                  validator: phoneValidator,
+                },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+
+            {/* Address */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Địa chỉ"
+              name="address"
+              rules={[{ required: true, message: "Không thể để trống" }]}
+            >
+              <Input />
+            </Form.Item>
+
+            {/* BirthDay */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Ngày Sinh"
+              name="birthDay"
+              rules={[
+                {
+                  validator: dateOfBirthValidator,
+                },
+                { type: "date", message: "Ngày sinh không hợp lệ" },
+              ]}
+            >
+              <DatePicker format="YYYY/MM/DD" />
+            </Form.Item>
+
+            <Form.Item label="Trạng thái" name="active">
+              <Select
+                // defaultValue={true}
+                options={[
+                  {
+                    value: "true",
+                    label: "Kích hoạt",
+                  },
+                  {
+                    value: "false",
+                    label: "Thu hồi",
+                  },
+                ]}
+              />
+            </Form.Item>
+
+            <Form.Item label="Quyền tài khoản" name="roles">
+              <Checkbox.Group
+                options={[
+                  {
+                    label: "customer",
+                    value: "customer",
+                  },
+                ]}
+              />
+            </Form.Item>
+
+            <Form.Item label="Hình ảnh" name="file">
+              <Upload
+                showUploadList={true}
+                // listType="picture-card"
+                beforeUpload={(file) => {
+                  setFile(file);
+                  return false;
+                }}
+              >
+                <div className="flex justify-center items-center w-[100px] h-[100px] border border-dashed rounded-lg hover:cursor-pointer hover:border-blue-400 hover:bg-white transition-all ease-in duration-150">
+                  <AiOutlinePlus size={"20px"} />
+                </div>
+              </Upload>
+            </Form.Item>
+          </div>
+        </Form>
+      </Modal>
       <Table rowKey="_id" dataSource={customers} columns={columns} />
 
+      {/* modal update */}
       <Modal
         centered
         open={editFormVisible}
@@ -406,9 +582,7 @@ function Customers() {
             className=""
             label="Họ - Tên Đệm"
             name="firstName"
-            rules={[
-              { required: true, message: "Please input your first name!" },
-            ]}
+            rules={[{ required: true, message: "Không thể để trống" }]}
           >
             <Input />
           </Form.Item>
@@ -419,9 +593,7 @@ function Customers() {
             className=""
             label="Tên"
             name="lastName"
-            rules={[
-              { required: true, message: "Please input your last name!" },
-            ]}
+            rules={[{ required: true, message: "Không thể để trống" }]}
           >
             <Input />
           </Form.Item>
@@ -433,8 +605,8 @@ function Customers() {
             label="Email"
             name="email"
             rules={[
-              { required: true, message: "Please input your email!" },
-              { type: "email", message: `Invalid Email` },
+              { required: true, message: "Không thể để trống" },
+              { type: "email", message: "Email không hợp lệ" },
             ]}
           >
             <Input />
@@ -446,7 +618,7 @@ function Customers() {
             className=""
             label="Mật khẩu"
             name="password"
-            rules={[{ required: true, message: "Please input your password!" }]}
+            rules={[{ required: true, message: "Không thể để trống" }]}
           >
             <Input.Password />
           </Form.Item>
@@ -458,7 +630,10 @@ function Customers() {
             label="Số điện thoại"
             name="phoneNumber"
             rules={[
-              { required: true, message: "Please input your phone number!" },
+              { required: true, message: "Không thể để trống" },
+              {
+                validator: phoneValidator,
+              },
             ]}
           >
             <Input />
@@ -470,13 +645,24 @@ function Customers() {
             className=""
             label="Địa chỉ"
             name="address"
-            rules={[{ required: true, message: "Please input your address!" }]}
+            rules={[{ required: true, message: "Không thể để trống" }]}
           >
             <Input />
           </Form.Item>
 
           {/* BirthDay */}
-          <Form.Item hasFeedback className="" label="Ngày Sinh" name="birthDay">
+          <Form.Item
+            hasFeedback
+            className=""
+            label="Ngày Sinh"
+            name="birthDay"
+            rules={[
+              {
+                validator: dateOfBirthValidator,
+              },
+              { type: "date", message: "Ngày sinh không hợp lệ" },
+            ]}
+          >
             <Input />
           </Form.Item>
 

@@ -2,3 +2,6 @@
   display: flex;
   justify-content: center;
 }
+.ant-modal-content {
+  width: 40rem;
+}

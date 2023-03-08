@@ -1,5 +1,6 @@
 import React from "react";
 import numeral from "numeral";
+import moment from "moment";
 import {
   Table,
   Button,
@@ -13,6 +14,7 @@ import {
   Select,
   Space,
   Popconfirm,
+  DatePicker,
 } from "antd";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { axiosClient } from "../../../libraries/axiosClient";
@@ -25,7 +27,8 @@ export default function Orders() {
   const [employees, setEmployees] = React.useState([]);
   const [selectedOrder, setSelectedOrder] = React.useState(null);
   const [refresh, setRefresh] = React.useState(false);
-
+  const [createFormVisible, setCreateFormVisible] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
   // Products
   const [products, setProducts] = React.useState([]);
   React.useEffect(() => {
@@ -159,6 +162,14 @@ export default function Orders() {
       },
     },
     {
+      title: "Ngày tạo hóa đơn",
+      dataIndex: "createdDate",
+      key: "createdDate",
+      render: (text) => {
+        return <p>{moment(text).format("DD/MM/yyyy")}</p>;
+      },
+    },
+    {
       title: "Tổng tiền",
       dataIndex: "total",
       key: "total",
@@ -244,6 +255,8 @@ export default function Orders() {
   // update form
   const [updateForm] = Form.useForm();
 
+  const [searchForm] = Form.useForm();
+
   // get list employees
   React.useEffect(() => {
     axiosClient.get("/employees").then((response) => {
@@ -292,187 +305,401 @@ export default function Orders() {
   const onUpdateFinishFailed = (errors) => {
     console.log("💣", errors);
   };
+  const onSearchFinish = (values) => {
+    setLoading(true);
+    axiosClient
+      .post("/customers/dia-chi-khach-hang", values)
+      .then((response) => {
+        setCustomers(response.data.results);
+        setLoading(false);
+      })
+      .catch((err) => {
+        message.error("Lọc thông tin lỗi");
+        setLoading(false);
+      });
+  };
+
+  const onSearchFinishFailed = (errors) => {
+    console.log("🐣", errors);
+  };
+
+  // validate
+  // validate phone number
+  const phoneValidator = (rule, value, callback) => {
+    const phoneNumberPattern =
+      /^(0?)(3[2-9]|5[6|8|9]|7[0|6-9]|8[0-6|8|9]|9[0-4|6-9])[0-9]{7}$/;
+    if (value && !phoneNumberPattern.test(value)) {
+      callback("Số điện thoại không hợp lệ");
+    } else {
+      callback();
+    }
+  };
+
+  // validate ngày hóa đơn
+  const dateOfValidator = (rule, value, callback) => {
+    const dateFormat = "YYYY/MM/DD"; // Định dạng ngày tháng
+    const currentDate = moment(); // Lấy ngày hiện tại
+    const dateOfCreatedDate = moment(value, dateFormat); // Chuyển đổi giá trị nhập vào thành kiểu moment
+
+    // Kiểm tra tính hợp lệ của ngày sinh
+    if (currentDate.diff(dateOfCreatedDate, "days") < 0) {
+      callback("Ngày hóa đơn phải nhỏ hơn ngày hiện tại");
+    } else {
+      callback();
+    }
+  };
   return (
     <div>
       <h1 className="text-center p-2 mb-5 text-xl">📑 Orders 📑</h1>
-      <Form
-        form={createForm}
-        name="create-form"
-        labelCol={{ span: 8 }}
-        wrapperCol={{ span: 16 }}
-        initialValues={{ remember: true }}
-        onFinish={onFinish}
-        onFinishFailed={onFinishFailed}
-        autoComplete="off"
-      >
-        <div className="w-[80%]">
-          {/* Created Date */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Ngày tạo"
-            name="createdDate"
-            rules={[
-              { required: true, message: "Không thể để trống" },
-              { type: "date", message: "Ngày không hợp lệ" },
-            ]}
-          >
-            <Input />
-          </Form.Item>
 
-          {/* Shipped Date */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Ngày giao"
-            name="shippedDate"
-            rules={[
-              { required: true, message: "Không thể để trống" },
-              { type: "date", message: "Ngày không hợp lệ" },
-              {
-                validate: {
-                  validator: async (rule, value) => {
-                    if (!value) return true;
-                    if (value < createDate) {
-                      return false;
-                    }
-                    return true;
+      {/* Tìm kiếm đơn hàng */}
+      <div className="border border-solid rounded-md">
+        <p className="text-center text-primary text-[17px] font-bold">
+          Tìm kiếm
+        </p>
+        <div className="mx-auto">
+          <Form
+            form={searchForm}
+            name="search-form"
+            labelCol={{ span: 8 }}
+            wrapperCol={{ span: 16 }}
+            initialValues={{ remember: true }}
+            onFinish={onSearchFinish}
+            onFinishFailed={onSearchFinishFailed}
+            autoComplete="off"
+            className="m-5"
+          >
+            <div className="w-[100%]">
+              {/* Created Date */}
+              <Form.Item
+                hasFeedback
+                className=""
+                label="Ngày tạo"
+                name="createdDate"
+                rules={[
+                  {
+                    validator: dateOfValidator,
                   },
-                  message: "Ngày giao phải nhỏ hơn ngày hiện tại",
-                },
-              },
-            ]}
-          >
-            <Input value={Date.now()} />
-          </Form.Item>
+                  { type: "date", message: "Ngày không hợp lệ" },
+                ]}
+              >
+                <DatePicker format="YYYY/MM/DD" />
+              </Form.Item>
 
-          {/* Status */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Trạng thái đơn hàng"
-            name="status"
-            rules={[
-              { required: true, message: "Không thể để trống" },
-              {
-                validator: (_, value) => {
-                  console.log(value);
+              {/* Shipped Date */}
+              <Form.Item
+                hasFeedback
+                className=""
+                label="Ngày giao"
+                name="shippedDate"
+                rules={[
+                  {
+                    validator: dateOfValidator,
+                  },
+                  { type: "date", message: "Ngày không hợp lệ" },
+                ]}
+              >
+                <DatePicker format="YYYY/MM/DD" />
+              </Form.Item>
 
-                  if (["WAITING", "COMPLETED", "CANCELED"].includes(value)) {
-                    return Promise.resolve();
-                  } else {
-                    return Promise.reject("Not valid status");
+              {/* Status */}
+              <Form.Item
+                hasFeedback
+                className=""
+                label="Trạng thái đơn hàng"
+                name="status"
+              >
+                <Select
+                  options={[
+                    {
+                      value: "COMPLETED",
+                      label: "COMPLETED",
+                    },
+                    {
+                      value: "WAITING",
+                      label: "WAITING",
+                    },
+                    {
+                      value: "CANCELED",
+                      label: "CANCELED",
+                    },
+                  ]}
+                />
+              </Form.Item>
+
+              {/* Shipping Address */}
+              <Form.Item
+                hasFeedback
+                className=""
+                label="Địa chỉ giao hàng"
+                name="shippingAddress"
+              >
+                <Input />
+              </Form.Item>
+
+              {/* Payment Type */}
+              <Form.Item
+                hasFeedback
+                className=""
+                label="Hình thức thanh toán"
+                name="paymentType"
+              >
+                <Select
+                  options={[
+                    {
+                      value: "MOMO",
+                      label: "MOMO",
+                    },
+                    {
+                      value: "CASH",
+                      label: "CASH",
+                    },
+                  ]}
+                />
+              </Form.Item>
+
+              {/* Customer */}
+              <Form.Item className="" label="Khách hàng" name="fullName">
+                <Input />
+              </Form.Item>
+              {/* PhoneNumber */}
+              <Form.Item
+                className=""
+                label="Số điện thoại"
+                name="phoneNumber"
+                rules={[
+                  {
+                    validator: phoneValidator,
+                  },
+                ]}
+              >
+                <Input />
+              </Form.Item>
+              {/* Employee */}
+              <Form.Item className="" label="Nhân viên" name="employeeId">
+                <Select
+                  options={
+                    employees &&
+                    employees.map((suplier) => {
+                      return {
+                        value: suplier._id,
+                        label: suplier.fullName,
+                      };
+                    })
                   }
-                },
-              },
-            ]}
-          >
-            <Select
-              options={[
-                {
-                  value: "COMPLETED",
-                  label: "COMPLETED",
-                },
-                {
-                  value: "WAITING",
-                  label: "WAITING",
-                },
-                {
-                  value: "CANCELED",
-                  label: "CANCELED",
-                },
-                {
-                  value: "A",
-                  label: "A",
-                },
-              ]}
-            />
-          </Form.Item>
+                />
+              </Form.Item>
 
-          {/* Description */}
-          <Form.Item hasFeedback className="" label="Mô tả" name="description">
-            <Input />
-          </Form.Item>
-
-          {/* Shipping Address */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Địa chỉ giao hàng"
-            name="shippingAddress"
-            rules={[{ required: true, message: "Không thể để trống" }]}
-          >
-            <Input />
-          </Form.Item>
-
-          {/* Payment Type */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Hình thức thanh toán"
-            name="paymentType"
-            rules={[{ required: true, message: "Không thể để trống" }]}
-          >
-            <Select
-              options={[
-                {
-                  value: "MOMO",
-                  label: "MOMO",
-                },
-                {
-                  value: "CASH",
-                  label: "CASH",
-                },
-              ]}
-            />
-          </Form.Item>
-
-          {/* Customer */}
-          <Form.Item
-            className=""
-            label="Khách hàng"
-            name="fullName"
-            rules={[{ required: true, message: "Không thể để trống" }]}
-          >
-            <Input />
-          </Form.Item>
-          {/* PhoneNumber */}
-          <Form.Item
-            className=""
-            label="Số điện thoại"
-            name="phoneNumber"
-            rules={[{ required: true, message: "Không thể để trống" }]}
-          >
-            <Input />
-          </Form.Item>
-          {/* Employee */}
-          <Form.Item
-            className=""
-            label="Nhân viên"
-            name="employeeId"
-            rules={[{ required: true, message: "Không thể để trống" }]}
-          >
-            <Select
-              options={
-                employees &&
-                employees.map((suplier) => {
-                  return {
-                    value: suplier._id,
-                    label: suplier.fullName,
-                  };
-                })
-              }
-            />
-          </Form.Item>
-
-          {/* Button Save */}
-          <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-            <Button type="primary" htmlType="submit">
-              Lưu
-            </Button>
-          </Form.Item>
+              {/* Button Lọc thông tin */}
+              <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+                <Button type="primary" htmlType="submit" loading={loading}>
+                  {loading ? "Đang xử lý ..." : "Lọc thông tin"}
+                </Button>
+              </Form.Item>
+            </div>
+          </Form>
         </div>
-      </Form>
+      </div>
+      {/* Modal thêm mới sản phẩm */}
+      <Button
+        className="bg-blue-500 text-white font-bold mb-5 mt-5"
+        onClick={() => {
+          setCreateFormVisible(true);
+          console.log("ok");
+        }}
+      >
+        Thêm mới đơn hàng
+      </Button>
+      <Modal
+        centered
+        open={createFormVisible}
+        title="Thêm mới thông tin đơn hàng"
+        onOk={() => {
+          createForm.submit();
+          //setCreateFormVisible(false);
+        }}
+        onCancel={() => {
+          setCreateFormVisible(false);
+        }}
+        okText="Lưu"
+        cancelText="Đóng"
+      >
+        <Form
+          form={createForm}
+          name="create-form"
+          labelCol={{ span: 8 }}
+          wrapperCol={{ span: 16 }}
+          initialValues={{ remember: true }}
+          onFinish={onFinish}
+          onFinishFailed={onFinishFailed}
+          autoComplete="off"
+        >
+          <div className="w-[100%]">
+            {/* Created Date */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Ngày tạo"
+              name="createdDate"
+              rules={[
+                { required: true, message: "Không thể để trống" },
+                {
+                  validator: dateOfValidator,
+                },
+                { type: "date", message: "Ngày không hợp lệ" },
+              ]}
+            >
+              <DatePicker format="YYYY/MM/DD" />
+            </Form.Item>
+
+            {/* Shipped Date */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Ngày giao"
+              name="shippedDate"
+              rules={[
+                { required: true, message: "Không thể để trống" },
+                {
+                  validator: dateOfValidator,
+                },
+                { type: "date", message: "Ngày không hợp lệ" },
+              ]}
+            >
+              <DatePicker format="YYYY/MM/DD" />
+            </Form.Item>
+
+            {/* Status */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Trạng thái đơn hàng"
+              name="status"
+              rules={[
+                { required: true, message: "Không thể để trống" },
+                {
+                  validator: (_, value) => {
+                    console.log(value);
+
+                    if (["WAITING", "COMPLETED", "CANCELED"].includes(value)) {
+                      return Promise.resolve();
+                    } else {
+                      return Promise.reject("Trạng thái không hợp lệ");
+                    }
+                  },
+                },
+              ]}
+            >
+              <Select
+                options={[
+                  {
+                    value: "COMPLETED",
+                    label: "COMPLETED",
+                  },
+                  {
+                    value: "WAITING",
+                    label: "WAITING",
+                  },
+                  {
+                    value: "CANCELED",
+                    label: "CANCELED",
+                  },
+                  {
+                    value: "A",
+                    label: "A",
+                  },
+                ]}
+              />
+            </Form.Item>
+
+            {/* Description */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Mô tả"
+              name="description"
+            >
+              <Input />
+            </Form.Item>
+
+            {/* Shipping Address */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Địa chỉ giao hàng"
+              name="shippingAddress"
+              rules={[{ required: true, message: "Không thể để trống" }]}
+            >
+              <Input />
+            </Form.Item>
+
+            {/* Payment Type */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Hình thức thanh toán"
+              name="paymentType"
+              rules={[{ required: true, message: "Không thể để trống" }]}
+            >
+              <Select
+                options={[
+                  {
+                    value: "MOMO",
+                    label: "MOMO",
+                  },
+                  {
+                    value: "CASH",
+                    label: "CASH",
+                  },
+                ]}
+              />
+            </Form.Item>
+
+            {/* Customer */}
+            <Form.Item
+              className=""
+              label="Khách hàng"
+              name="fullName"
+              rules={[{ required: true, message: "Không thể để trống" }]}
+            >
+              <Input />
+            </Form.Item>
+            {/* PhoneNumber */}
+            <Form.Item
+              className=""
+              label="Số điện thoại"
+              name="phoneNumber"
+              rules={[
+                { required: true, message: "Không thể để trống" },
+                {
+                  validator: phoneValidator,
+                },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+            {/* Employee */}
+            <Form.Item
+              className=""
+              label="Nhân viên"
+              name="employeeId"
+              rules={[{ required: true, message: "Không thể để trống" }]}
+            >
+              <Select
+                options={
+                  employees &&
+                  employees.map((suplier) => {
+                    return {
+                      value: suplier._id,
+                      label: suplier.fullName,
+                    };
+                  })
+                }
+              />
+            </Form.Item>
+          </div>
+        </Form>
+      </Modal>
       <Modal
         centered
         width={"90%"}
@@ -617,7 +844,13 @@ export default function Orders() {
               className=""
               label="Ngày tạo"
               name="createdDate"
-              rules={[{ required: false }]}
+              rules={[
+                { required: true, message: "Không thể để trống" },
+                {
+                  validator: dateOfValidator,
+                },
+                { type: "date", message: "Ngày không hợp lệ" },
+              ]}
             >
               <Input />
             </Form.Item>
@@ -629,20 +862,11 @@ export default function Orders() {
               label="Ngày giao"
               name="shippedDate"
               rules={[
-                { required: true, type: "Date", message: "Không để trống" },
-                { type: "date", message: "Ngày không hợp lệ" },
+                { required: true, message: "Không thể để trống" },
                 {
-                  validate: {
-                    validator: function (value) {
-                      if (!value) return true;
-                      if (value < createDate) {
-                        return false;
-                      }
-                      return true;
-                    },
-                    message: "Ngày giao phải nhỏ hơn ngày hiện tại",
-                  },
+                  validator: dateOfValidator,
                 },
+                { type: "date", message: "Ngày không hợp lệ" },
               ]}
             >
               <Input value={Date.now()} />
@@ -655,19 +879,16 @@ export default function Orders() {
               label="Trạng thái đơn hàng"
               name="status"
               rules={[
-                { required: true, message: "Please select status!" },
+                { required: true, message: "Không thể để trống" },
                 {
-                  validate: {
-                    validator: (value) => {
-                      if (
-                        ["WAITING", "COMPLETED", "CANCELED"].includes(value)
-                      ) {
-                        return true;
-                      } else {
-                        return false;
-                      }
-                    },
-                    message: `status: {status} is invalid`,
+                  validator: (_, value) => {
+                    console.log(value);
+
+                    if (["WAITING", "COMPLETED", "CANCELED"].includes(value)) {
+                      return Promise.resolve();
+                    } else {
+                      return Promise.reject("Trạng thái không hợp lệ");
+                    }
                   },
                 },
               ]}
@@ -706,9 +927,7 @@ export default function Orders() {
               className=""
               label="Địa chỉ giao hàng"
               name="shippingAddress"
-              rules={[
-                { required: true, message: "Please input Shipping Address!" },
-              ]}
+              rules={[{ required: true, message: "Không thể để trống" }]}
             >
               <Input />
             </Form.Item>
@@ -719,9 +938,7 @@ export default function Orders() {
               className=""
               label="Hình thức thanh toán"
               name="paymentType"
-              rules={[
-                { required: true, message: "Please select payment type!" },
-              ]}
+              rules={[{ required: true, message: "Không thể để trống" }]}
             >
               <Select
                 options={[
@@ -742,7 +959,7 @@ export default function Orders() {
               className=""
               label="Khách hàng"
               name="fullName"
-              rules={[{ required: true, message: "Please selected customer!" }]}
+              rules={[{ required: true, message: "Không thể để trống" }]}
             >
               <Input />
             </Form.Item>
@@ -751,7 +968,12 @@ export default function Orders() {
               className=""
               label="Số điện thoại"
               name="phoneNumber"
-              rules={[{ required: true, message: "Please selected customer!" }]}
+              rules={[
+                { required: true, message: "Không thể để trống" },
+                {
+                  validator: phoneValidator,
+                },
+              ]}
             >
               <Input />
             </Form.Item>
@@ -760,7 +982,7 @@ export default function Orders() {
               className=""
               label="Nhân viên"
               name="employeeId"
-              rules={[{ required: true, message: "Please selected empoyees!" }]}
+              rules={[{ required: true, message: "Không thể để trống" }]}
             >
               <Select
                 options={

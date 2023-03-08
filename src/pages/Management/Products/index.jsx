@@ -34,7 +34,8 @@ function Products() {
   const [editFormVisible, setEditFormVisible] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [file, setFile] = useState();
-
+  const [createFormVisible, setCreateFormVisible] = useState(false);
+  const [loading, setLoading] = React.useState(false);
   const columns = [
     {
       title: "Danh mục",
@@ -54,7 +55,7 @@ function Products() {
       },
     },
     {
-      title: "",
+      title: "Hình ảnh",
       dataIndex: "imageProduct",
       key: "imageProduct",
       render: (text, record) => {
@@ -218,12 +219,12 @@ function Products() {
           .post(`${API_URL}/upload-image/products/${_id}`, formData)
           .then((response) => {
             // message.success("Tải lên hình ảnh thành công!");
-            createForm.resetFields();
-            setRefresh((f) => f + 1);
           })
           .catch((err) => {
             message.error("Tải lên hình ảnh thất bại!");
           });
+        createForm.resetFields();
+        setRefresh((f) => f + 1);
         message.success("Thêm thành công!");
       })
       .catch((err) => {
@@ -265,135 +266,371 @@ function Products() {
   const onUpdateFinishFailed = (errors) => {
     console.log("🐣", errors);
   };
+  const onSearchFinish = (values) => {
+    setLoading(true);
+    axiosClient
+      .post("/customers/dia-chi-khach-hang", values)
+      .then((response) => {
+        setCustomers(response.data.results);
+        console.log(response.data.results);
+        setLoading(false);
+      })
+      .catch((err) => {
+        message.error("Lọc thông tin lỗi");
+        setLoading(false);
+      });
+  };
 
+  const onSearchFinishFailed = (errors) => {
+    console.log("🐣", errors);
+  };
   const [createForm] = Form.useForm();
   const [updateForm] = Form.useForm();
+  const [searchForm] = Form.useForm();
   return (
     <>
       <h1 className="text-center p-2 mb-5 text-xl">🛒 Quản Lý Sản Phẩm 🛒</h1>
-      <Form
-        form={createForm}
-        name="create-form"
-        labelCol={{ span: 8 }}
-        wrapperCol={{ span: 16 }}
-        initialValues={{ remember: true }}
-        onFinish={onFinish}
-        onFinishFailed={onFinishFailed}
-        autoComplete="off"
-      >
-        <div className="w-[80%]">
-          {/* Danh mục sản phẩm */}
-          <Form.Item
-            className=""
-            label="Danh mục"
-            name="categoryId"
-            rules={[{ required: true, message: "Please selected category!" }]}
-          >
-            <Select
-              options={
-                categories &&
-                categories.map((category) => {
-                  return {
-                    value: category._id,
-                    label: category.name,
-                  };
-                })
-              }
-            />
-          </Form.Item>
 
-          {/* Tên sản phẩm */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Tên sản phẩm"
-            name="name"
-            rules={[{ required: true, message: "Please input product name!" }]}
-          >
-            <Input />
-          </Form.Item>
+      {/* Search */}
+      <div className="border border-solid rounded-md">
+        <p className="text-center text-primary text-[17px] font-bold">
+          Tìm kiếm
+        </p>
+        <Form
+          form={searchForm}
+          name="search-form"
+          labelCol={{ span: 8 }}
+          wrapperCol={{ span: 16 }}
+          initialValues={{ remember: true }}
+          onFinish={onSearchFinish}
+          onFinishFailed={onSearchFinishFailed}
+          autoComplete="off"
+          className="m-5"
+        >
+          <div className="w-[80%]">
+            {/* Danh mục sản phẩm */}
+            <Form.Item className="" label="Danh mục" name="categoryId">
+              <Select
+                options={
+                  categories &&
+                  categories.map((category) => {
+                    return {
+                      value: category._id,
+                      label: category.name,
+                    };
+                  })
+                }
+              />
+            </Form.Item>
 
-          {/* Giá tiền */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Giá tiền"
-            name="price"
-            rules={[{ required: true, message: "Please input price!" }]}
-          >
-            <InputNumber className="w-[50%]" addonAfter="VND" />
-          </Form.Item>
-
-          {/* Giảm giá */}
-          <Form.Item hasFeedback className="" label="Giảm giá" name="discount">
-            <InputNumber className="w-[50%]" addonAfter="%" />
-          </Form.Item>
-
-          {/* Tồn kho */}
-          <Form.Item hasFeedback className="" label="Tồn kho" name="stock">
-            <InputNumber className="w-[50%]" />
-          </Form.Item>
-
-          {/* Đơn vị tính */}
-          <Form.Item hasFeedback className="" label="Đơn vị tính" name="dram">
-            <Input className="w-[50%]" />
-          </Form.Item>
-
-          {/* Nhà cung cấp */}
-          <Form.Item
-            className=""
-            label="Nhà cung cấp"
-            name="supplierId"
-            rules={[{ required: true, message: "Please selected suplier!" }]}
-          >
-            <Select
-              options={
-                suppliers &&
-                suppliers.map((suplier) => {
-                  return {
-                    value: suplier._id,
-                    label: suplier.name,
-                  };
-                })
-              }
-            />
-          </Form.Item>
-
-          {/* Mô tả */}
-          <Form.Item hasFeedback className="" label="Mô tả" name="description">
-            <TextArea rows={5} />
-          </Form.Item>
-
-          {/* Hình ảnh */}
-          <Form.Item
-            label="Hình ảnh"
-            name="file"
-            rules={[
-              { required: true, message: "Hãy chọn hình ảnh cho sản phẩm!" },
-            ]}
-          >
-            <Upload
-              showUploadList={true}
-              // listType="picture-card"
-              beforeUpload={(file) => {
-                setFile(file);
-                return false;
-              }}
+            {/* Tên sản phẩm */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Tên sản phẩm"
+              name="name"
             >
-              <div className="flex justify-center items-center w-[100px] h-[100px] border border-dashed rounded-lg hover:cursor-pointer hover:border-blue-400 hover:bg-white transition-all ease-in duration-150">
-                <AiOutlinePlus size={"20px"} />
-              </div>
-            </Upload>
-          </Form.Item>
+              <Input />
+            </Form.Item>
 
-          {/* Button Save */}
-          <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-            <Button type="primary" htmlType="submit">
-              Lưu
-            </Button>
-          </Form.Item>
-        </div>
-      </Form>
+            {/* Giá tiền */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Giá tiền"
+              name="price"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (value < 0) {
+                      return Promise.reject(
+                        new Error("Giá trị phải lớn hơn hoặc bằng 0")
+                      );
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
+            >
+              <InputNumber className="w-[50%]" addonAfter="VND" />
+            </Form.Item>
+
+            {/* Giảm giá */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Giảm giá"
+              name="discount"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (value < 0) {
+                      return Promise.reject(
+                        new Error("Giá trị phải lớn hơn hoặc bằng 0")
+                      );
+                    } else if (value > 100) {
+                      return Promise.reject(
+                        new Error("Giá trị phải nhỏ hơn hoặc bằng 100")
+                      );
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
+            >
+              <InputNumber className="w-[50%]" addonAfter="%" />
+            </Form.Item>
+
+            {/* Tồn kho */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Tồn kho"
+              name="stock"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (value < 0) {
+                      return Promise.reject(
+                        new Error("Giá trị phải lớn hơn hoặc bằng 0")
+                      );
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
+            >
+              <InputNumber className="w-[50%]" />
+            </Form.Item>
+
+            {/* Nhà cung cấp */}
+            <Form.Item className="" label="Nhà cung cấp" name="supplierId">
+              <Select
+                options={
+                  suppliers &&
+                  suppliers.map((suplier) => {
+                    return {
+                      value: suplier._id,
+                      label: suplier.name,
+                    };
+                  })
+                }
+              />
+            </Form.Item>
+            {/* Button Lọc thông tin */}
+            <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+              <Button type="primary" htmlType="submit" loading={loading}>
+                {loading ? "Đang xử lý ..." : "Lọc thông tin"}
+              </Button>
+            </Form.Item>
+          </div>
+        </Form>
+      </div>
+
+      {/* Modal thêm mới sản phẩm */}
+      <Button
+        className="bg-blue-500 text-white font-bold mb-5 mt-5"
+        onClick={() => {
+          setCreateFormVisible(true);
+          console.log("ok");
+        }}
+      >
+        Thêm mới sản phẩm
+      </Button>
+      <Modal
+        centered
+        open={createFormVisible}
+        title="Thêm mới thông tin sản phẩm"
+        onOk={() => {
+          createForm.submit();
+          //setCreateFormVisible(false);
+        }}
+        onCancel={() => {
+          setCreateFormVisible(false);
+        }}
+        okText="Lưu"
+        cancelText="Đóng"
+      >
+        <Form
+          form={createForm}
+          name="create-form"
+          labelCol={{ span: 8 }}
+          wrapperCol={{ span: 16 }}
+          initialValues={{ remember: true }}
+          onFinish={onFinish}
+          onFinishFailed={onFinishFailed}
+          autoComplete="off"
+        >
+          <div className="w-[80%]">
+            {/* Danh mục sản phẩm */}
+            <Form.Item
+              className=""
+              label="Danh mục"
+              name="categoryId"
+              rules={[{ required: true, message: "Không thể để trống" }]}
+            >
+              <Select
+                options={
+                  categories &&
+                  categories.map((category) => {
+                    return {
+                      value: category._id,
+                      label: category.name,
+                    };
+                  })
+                }
+              />
+            </Form.Item>
+
+            {/* Tên sản phẩm */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Tên sản phẩm"
+              name="name"
+              rules={[{ required: true, message: "Không thể để trống" }]}
+            >
+              <Input />
+            </Form.Item>
+
+            {/* Giá tiền */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Giá tiền"
+              name="price"
+              rules={[
+                { required: true, message: "Không thể để trống" },
+                {
+                  validator: (_, value) => {
+                    if (value < 0) {
+                      return Promise.reject(
+                        new Error("Giá tiền phải lớn hơn hoặc bằng 0")
+                      );
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
+            >
+              <InputNumber className="w-[50%]" addonAfter="VND" />
+            </Form.Item>
+
+            {/* Giảm giá */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Giảm giá"
+              name="discount"
+              rules={[
+                {
+                  validator: (_, value) => {
+                    if (value < 0) {
+                      return Promise.reject(
+                        new Error("Giá trị phải lớn hơn hoặc bằng 0")
+                      );
+                    } else if (value > 100) {
+                      return Promise.reject(
+                        new Error("Giá trị phải nhỏ hơn hoặc bằng 100")
+                      );
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
+            >
+              <InputNumber className="w-[50%]" addonAfter="%" />
+            </Form.Item>
+
+            {/* Tồn kho */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Tồn kho"
+              name="stock"
+              rules={[
+                { required: true, message: "Không thể để trống" },
+                {
+                  validator: (_, value) => {
+                    if (value < 0) {
+                      return Promise.reject(
+                        new Error("Tồn kho phải lớn hơn hoặc bằng 0")
+                      );
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
+            >
+              <InputNumber className="w-[50%]" />
+            </Form.Item>
+
+            {/* Đơn vị tính */}
+            <Form.Item hasFeedback className="" label="Đơn vị tính" name="dram">
+              <Input className="w-[50%]" />
+            </Form.Item>
+
+            {/* Nhà cung cấp */}
+            <Form.Item
+              className=""
+              label="Nhà cung cấp"
+              name="supplierId"
+              rules={[{ required: true, message: "Không thể để trống" }]}
+            >
+              <Select
+                options={
+                  suppliers &&
+                  suppliers.map((suplier) => {
+                    return {
+                      value: suplier._id,
+                      label: suplier.name,
+                    };
+                  })
+                }
+              />
+            </Form.Item>
+
+            {/* Mô tả */}
+            <Form.Item
+              hasFeedback
+              className=""
+              label="Mô tả"
+              name="description"
+            >
+              <TextArea rows={5} />
+            </Form.Item>
+
+            {/* Hình ảnh */}
+            <Form.Item
+              label="Hình ảnh"
+              name="file"
+              rules={[
+                { required: true, message: "Hãy chọn hình ảnh cho sản phẩm!" },
+              ]}
+            >
+              <Upload
+                showUploadList={true}
+                // listType="picture-card"
+                beforeUpload={(file) => {
+                  setFile(file);
+                  return false;
+                }}
+              >
+                <div className="flex justify-center items-center w-[100px] h-[100px] border border-dashed rounded-lg hover:cursor-pointer hover:border-blue-400 hover:bg-white transition-all ease-in duration-150">
+                  <AiOutlinePlus size={"20px"} />
+                </div>
+              </Upload>
+            </Form.Item>
+
+            {/* Button Save */}
+            <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+              <Button type="primary" htmlType="submit">
+                Lưu
+              </Button>
+            </Form.Item>
+          </div>
+        </Form>
+      </Modal>
 
       <Table rowKey="_id" dataSource={products} columns={columns} />
 
@@ -425,7 +662,7 @@ function Products() {
             className=""
             label="Danh mục"
             name="categoryId"
-            rules={[{ required: true, message: "Please selected category!" }]}
+            rules={[{ required: true, message: "Không thể để trống" }]}
           >
             <Select
               options={
@@ -446,7 +683,7 @@ function Products() {
             className=""
             label="Tên sản phẩm"
             name="name"
-            rules={[{ required: true, message: "Please input product name!" }]}
+            rules={[{ required: true, message: "Không thể để trống" }]}
           >
             <Input />
           </Form.Item>
@@ -457,18 +694,69 @@ function Products() {
             className=""
             label="Giá tiền"
             name="price"
-            rules={[{ required: true, message: "Please input price!" }]}
+            rules={[
+              { required: true, message: "Không thể để trống" },
+              {
+                validator: (_, value) => {
+                  if (value < 0) {
+                    return Promise.reject(
+                      new Error("Giá tiền phải lớn hơn hoặc bằng 0")
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
           >
             <InputNumber className="w-[50%]" addonAfter="VND" />
           </Form.Item>
 
           {/* Giảm giá */}
-          <Form.Item hasFeedback className="" label="Giảm giá" name="discount">
+          <Form.Item
+            hasFeedback
+            className=""
+            label="Giảm giá"
+            name="discount"
+            rules={[
+              {
+                validator: (_, value) => {
+                  if (value < 0) {
+                    return Promise.reject(
+                      new Error("Giá trị phải lớn hơn hoặc bằng 0")
+                    );
+                  } else if (value > 100) {
+                    return Promise.reject(
+                      new Error("Giá trị phải nhỏ hơn hoặc bằng 100")
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
+          >
             <InputNumber className="w-[50%]" addonAfter="%" />
           </Form.Item>
 
           {/* Tồn kho */}
-          <Form.Item hasFeedback className="" label="Tồn kho" name="stock">
+          <Form.Item
+            hasFeedback
+            className=""
+            label="Tồn kho"
+            name="stock"
+            rules={[
+              { required: true, message: "Không thể để trống" },
+              {
+                validator: (_, value) => {
+                  if (value < 0) {
+                    return Promise.reject(
+                      new Error("Tồn kho phải lớn hơn hoặc bằng 0")
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
+          >
             <InputNumber className="w-[50%]" />
           </Form.Item>
 
@@ -482,7 +770,7 @@ function Products() {
             className=""
             label="Nhà cung cấp"
             name="supplierId"
-            rules={[{ required: true, message: "Please selected suplier!" }]}
+            rules={[{ required: true, message: "Không thể để trống" }]}
           >
             <Select
               options={
