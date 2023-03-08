@@ -1,9 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import numeral from "numeral";
 import {
   Table,
   Button,
-  Card,
   Modal,
   Descriptions,
   Divider,
@@ -13,48 +12,73 @@ import {
   Select,
   Space,
   Popconfirm,
+  Upload,
 } from "antd";
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import {
+  UploadOutlined,
+  DeleteOutlined,
+  EditOutlined,
+} from "@ant-design/icons";
 import { axiosClient } from "../../../libraries/axiosClient";
+import axios from "axios";
+import { API_URL } from "../../../constants/URLS";
+import { useUser } from "../../../hooks/useUser";
 
-export default function Orders() {
+export default function ResolvingOrder() {
   const [editFormVisible, setEditFormVisible] = React.useState(false);
+  const [isOpenFormAccept, setIsOpenFormAccept] = React.useState(false);
   const [selectedRecord, setSelectedRecord] = React.useState(null);
-  const [addProductsModalVisible, setAddProductsModalVisible] =
-    React.useState(false);
   const [employees, setEmployees] = React.useState([]);
   const [selectedOrder, setSelectedOrder] = React.useState(null);
+  const [orders, setOrders] = React.useState([]);
   const [refresh, setRefresh] = React.useState(false);
+  const [file, setFile] = useState();
+  const { users } = useUser((state) => state);
 
-  // Products
-  const [products, setProducts] = React.useState([]);
+  // GET ORDER HAVE CONFIRMED ORDER
   React.useEffect(() => {
-    axiosClient.get("/products").then((response) => {
-      setProducts(response.data);
-    });
-  }, [refresh]);
-
-  React.useEffect(() => {
+    let orderResolving = [];
     if (selectedOrder) {
       axiosClient.get("orders/" + selectedOrder._id).then((response) => {
         setSelectedOrder(response.data);
       });
     }
-    axiosClient.get("/orders").then((response) => {
-      setOrders(response.data);
-    });
+    if (
+      users.roles.some((role) => {
+        return (
+          role === "directors" ||
+          role === "administrator" ||
+          role === "managers"
+        );
+      })
+    ) {
+      axiosClient.get("/orders").then((response) => {
+        response.data.map((order) => {
+          if (order.status.includes("DELIVERY IN PROGRESS")) {
+            orderResolving.push(order);
+          }
+        });
+        setOrders(orderResolving);
+      });
+    } else {
+      axiosClient.get("/orders").then((response) => {
+        response.data.map((order) => {
+          if (
+            order.employeeId === users.id &&
+            order.status.includes("DELIVERY IN PROGRESS")
+          ) {
+            orderResolving.push(order);
+          }
+        });
+        setOrders(orderResolving);
+      });
+    }
   }, [refresh]);
 
-  // get list employees have roles is "shipper"
+  // get list employees
   React.useEffect(() => {
-    let shippers = [];
     axiosClient.get("/employees").then((response) => {
-      response.data.map((shipper) => {
-        if (shipper.roles.includes("shipper")) {
-          shippers.push(shipper);
-        }
-      });
-      setEmployees(shippers);
+      setEmployees(response.data);
     });
   }, []);
 
@@ -120,42 +144,9 @@ export default function Orders() {
         );
       },
     },
-    {
-      title: "",
-      key: "actions",
-      render: (text, record) => {
-        return (
-          <Button
-            onClick={async () => {
-              setRefresh(false);
-              const currentProduct = record;
-              const response = await axiosClient.get(
-                "orders/" + selectedOrder._id
-              );
-              const currentOrder = response.data;
-              const { orderDetails } = currentOrder;
-              const remainOrderDetails = orderDetails.filter((x) => {
-                return (
-                  x.productId.toString() !== currentProduct.productId.toString()
-                );
-              });
-              await axiosClient.patch("orders/" + selectedOrder._id, {
-                orderDetails: remainOrderDetails,
-              });
-
-              setAddProductsModalVisible(false);
-              message.success("Xóa thành công");
-              setRefresh(true);
-            }}
-          >
-            Xóa
-          </Button>
-        );
-      },
-    },
   ];
 
-  // Orders
+  // Orders have status == "COMFIRMED ORDER"
   const columns = [
     {
       title: "Khách hàng",
@@ -212,7 +203,7 @@ export default function Orders() {
     },
     {
       title: "",
-      key: "actions",
+      key: "details",
       render: (text, record) => {
         return (
           <Button
@@ -233,71 +224,82 @@ export default function Orders() {
       render: (text, record) => {
         return (
           <Space>
-            {/* Update */}
-            <Button
-              type="dashed"
-              icon={<EditOutlined />}
-              onClick={() => {
-                setSelectedRecord(record);
-                console.log("selectes", record);
-                updateForm.setFieldsValue(record);
-                setEditFormVisible(true);
-              }}
-            />
+            {users.roles.some((role) => {
+              return (
+                role === "directors" ||
+                role === "administrator" ||
+                role === "managers"
+              );
+            }) ? (
+              <Button
+                type="dashed"
+                icon={<EditOutlined />}
+                onClick={() => {
+                  setSelectedRecord(record);
+                  console.log("selectes", record);
+                  updateForm.setFieldsValue(record);
+                  setEditFormVisible(true);
+                }}
+              />
+            ) : (
+              <Button
+                onClick={() => {
+                  setSelectedRecord(record);
+                  console.log("selectes", record);
+                  // acceptForm.setFieldsValue(record);
+                  setIsOpenFormAccept(true);
+                }}
+                className="text-green-500"
+              >
+                Xác Nhận
+              </Button>
+            )}
             {/* delete */}
-            <Popconfirm
-              title="Bạn có muốn hủy đơn hàng không?"
-              onConfirm={() => {
-                //delete
-                const id = record._id;
-                axiosClient
-                  .delete("/orders/" + id)
-                  .then((response) => {
-                    message.success("Hủy đơn hàng thành công!");
-                    setRefresh((pre) => pre + 1);
-                  })
-                  .catch((err) => {
-                    message.error("Hủy đơn hàng thất bại!");
-                  });
-                console.log("delete", record);
-              }}
-              onCancel={() => {}}
-              okText="Có"
-              cancelText="Không"
-            >
-              <Button danger icon={<DeleteOutlined />} />
-            </Popconfirm>
+            {users.roles.some((role) => {
+              return (
+                role === "directors" ||
+                role === "administrator" ||
+                role === "managers"
+              );
+            }) ? (
+              <Popconfirm
+                title="Bạn có muốn hủy đơn hàng không?"
+                onConfirm={() => {
+                  //Cancel order
+                  const id = record._id;
+                  axiosClient
+                    .patch("/orders/" + id, {
+                      employeeId: null,
+                      status: "WAITING CONFIRMATION ORDER",
+                    })
+                    .then((response) => {
+                      message.success("Hủy đơn hàng thành công!");
+                      setRefresh((pre) => pre + 1);
+                    })
+                    .catch((err) => {
+                      message.error("Hủy đơn hàng thất bại!");
+                    });
+                  console.log("Cancel order", record);
+                }}
+                onCancel={() => {}}
+                okText="Có"
+                cancelText="Không"
+              >
+                <Button danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            ) : (
+              <></>
+            )}
           </Space>
         );
       },
     },
   ];
 
-  const [orders, setOrders] = React.useState([]);
-
-  // create form
-  const [createForm] = Form.useForm();
   // update form
   const [updateForm] = Form.useForm();
-
-  // tạo mới form
-  const onFinish = (values) => {
-    axiosClient
-      .post("/orders", values)
-      .then((response) => {
-        message.success("Thêm Hóa Đơn thành công!");
-        createForm.resetFields();
-        setRefresh((f) => f + 1);
-      })
-      .catch((err) => {
-        message.error("Thêm Hóa Đơn thất bại!");
-        console.log({ message: message.err });
-      });
-    console.log("👌👌👌", values);
-  };
-  const onFinishFailed = (errors) => {
-    console.log("💣💣💣 ", errors);
-  };
+  // accept delivery progress ship form
+  const [acceptForm] = Form.useForm();
 
   // update form
   // xử lý cập nhật thông tin
@@ -321,190 +323,60 @@ export default function Orders() {
   const onUpdateFinishFailed = (errors) => {
     console.log("💣", errors);
   };
+
+  // accept delivery progress ship form
+  const onDeliverySuccess = (values) => {
+    const { file } = values;
+    axiosClient
+      .patch("/orders/" + selectedRecord._id, {
+        file,
+        status: "DELIVERY SUCCESS",
+        shippedDate: Date.now(),
+      })
+      .then((response) => {
+        const { _id } = response.data;
+        const formData = new FormData();
+        formData.append("file", file.file);
+        // console.log(file.file);
+        axios
+          .post(`${API_URL}/upload-image/orders/${_id}`, formData)
+          .then((response) => {
+            console.log("ok");
+            setRefresh((f) => f + 1);
+            setIsOpenFormAccept(false);
+            message.success("Xác nhận giao hàng thành công!");
+          })
+          .catch((err) => {
+            message.error("Tải lên hình ảnh thất bại!");
+          });
+      })
+      .catch((err) => {
+        console.log(err);
+        message.error("Cập nhật thất bại 😥");
+      });
+    console.log("❤", values);
+  };
+  const onDeliverySuccessFailed = (errors) => {
+    console.log("💣", errors);
+  };
+
   return (
     <div>
-      <h1 className="text-center p-2 mb-5 text-xl">📑 Quản Lý Đơn Hàng 📑</h1>
-      <Form
-        form={createForm}
-        name="create-form"
-        labelCol={{ span: 8 }}
-        wrapperCol={{ span: 16 }}
-        initialValues={{ remember: true }}
-        onFinish={onFinish}
-        onFinishFailed={onFinishFailed}
-        autoComplete="off"
-      >
-        <div className="w-[80%]">
-          {/* Created Date */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Ngày tạo"
-            name="createdDate"
-            rules={[
-              { required: true, message: "Không thể để trống" },
-              { type: "date", message: "Ngày không hợp lệ" },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-
-          {/* Shipped Date */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Ngày giao"
-            name="shippedDate"
-            rules={[
-              { type: "date", message: "Ngày không hợp lệ" },
-              {
-                validate: {
-                  validator: function (value) {
-                    if (!value) return true;
-                    if (value < createDate) {
-                      return false;
-                    }
-                    return true;
-                  },
-                  message: "Ngày giao: {VALUE} phải nhỏ hơn ngày hiện tại",
-                },
-              },
-            ]}
-          >
-            <Input value={Date.now()} />
-          </Form.Item>
-
-          {/* Status */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Trạng thái đơn hàng"
-            name="status"
-            rules={[
-              { required: true, message: "Không thể để trống" },
-              {
-                validator: (_, value) => {
-                  if (
-                    [
-                      "WAITING CONFIRMATION ORDER",
-                      "CONFIRMED ORDER",
-                      "SHIPPING CONFIRMATION",
-                      "DELIVERY IN PROGRESS",
-                      "DELIVERY SUCCESS",
-                      "RECEIVED ORDER",
-                      "CANCELED ORDER",
-                    ].includes(value)
-                  ) {
-                    return Promise.resolve();
-                  } else {
-                    return Promise.reject("Trạng thái không hợp lệ!");
-                  }
-                },
-              },
-            ]}
-          >
-            <Select
-              options={[
-                {
-                  value: "WAITING CONFIRMATION ORDER",
-                  label: "Đang Chờ Xác Nhận",
-                },
-              ]}
-            />
-          </Form.Item>
-
-          {/* Description */}
-          <Form.Item hasFeedback className="" label="Mô tả" name="description">
-            <Input />
-          </Form.Item>
-
-          {/* Shipping Address */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Địa chỉ giao hàng"
-            name="shippingAddress"
-            rules={[{ required: true, message: "Không thể để trống" }]}
-          >
-            <Input />
-          </Form.Item>
-
-          {/* Payment Type */}
-          <Form.Item
-            hasFeedback
-            className=""
-            label="Hình thức thanh toán"
-            name="paymentType"
-            rules={[{ required: true, message: "Không thể để trống" }]}
-          >
-            <Select
-              options={[
-                {
-                  value: "MOMO",
-                  label: "MOMO",
-                },
-                {
-                  value: "CASH",
-                  label: "Thanh Toán Bằng Tiền Mặt",
-                },
-              ]}
-            />
-          </Form.Item>
-
-          {/* Customer */}
-          <Form.Item
-            className=""
-            label="Khách hàng"
-            name="fullName"
-            rules={[{ required: true, message: "Không thể để trống" }]}
-          >
-            <Input />
-          </Form.Item>
-          {/* PhoneNumber */}
-          <Form.Item
-            className=""
-            label="Số điện thoại"
-            name="phoneNumber"
-            rules={[{ required: true, message: "Không thể để trống" }]}
-          >
-            <Input />
-          </Form.Item>
-          {/* Employee */}
-          <Form.Item
-            className=""
-            label="Nhân viên"
-            name="employeeId"
-            rules={[{ required: true, message: "Không thể để trống" }]}
-          >
-            <Select
-              options={
-                employees &&
-                employees.map((employee) => {
-                  return {
-                    value: employee._id,
-                    label: employee.fullName,
-                  };
-                })
-              }
-            />
-          </Form.Item>
-
-          {/* Button Save */}
-          <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-            <Button type="primary" htmlType="submit">
-              Lưu
-            </Button>
-          </Form.Item>
-        </div>
-      </Form>
+      <h1 className="p-2 mb-5 text-xl">🛵 Đơn Hàng Đang Vận Chuyển</h1>
+      {/* Modal view detail order */}
       <Modal
         centered
         width={"90%"}
         title="Chi tiết đơn hàng"
         open={selectedOrder}
+        onOk={() => {
+          setSelectedOrder(null);
+        }}
         onCancel={() => {
           setSelectedOrder(null);
         }}
+        okText="Tiếp tục"
+        cancelText="Đóng"
       >
         {selectedOrder && (
           <div>
@@ -541,76 +413,12 @@ export default function Orders() {
               dataSource={selectedOrder.orderDetails}
               columns={productColumns}
             />
-
-            <Button
-              onClick={() => {
-                setAddProductsModalVisible(true);
-                setRefresh(false);
-              }}
-            >
-              Thêm sản phẩm
-            </Button>
-
-            <Modal
-              centered
-              width={"80%"}
-              title="Danh sách sản phẩm"
-              open={addProductsModalVisible}
-              onCancel={() => {
-                setAddProductsModalVisible(false);
-              }}
-              onOk={() => {
-                setRefresh(true);
-              }}
-            >
-              {products &&
-                products.map((product) => {
-                  return (
-                    <Card key={product._id}>
-                      <strong>{product.name}</strong>
-                      <Button
-                        onClick={async () => {
-                          const response = await axiosClient.get(
-                            "orders/" + selectedOrder._id
-                          );
-                          const currentOrder = response.data;
-                          const { orderDetails } = currentOrder;
-                          const found = orderDetails.find(
-                            (x) => x.productId === product._id
-                          );
-                          if (found) {
-                            found.quantity++;
-                          } else {
-                            orderDetails.push({
-                              productId: product._id,
-                              quantity: 1,
-                            });
-                          }
-
-                          await axiosClient.patch(
-                            "orders/" + selectedOrder._id,
-                            {
-                              orderDetails,
-                            }
-                          );
-
-                          setAddProductsModalVisible(false);
-                          // RELOAD //
-
-                          setRefresh(true);
-                        }}
-                      >
-                        Add
-                      </Button>
-                    </Card>
-                  );
-                })}
-            </Modal>
           </div>
         )}
       </Modal>
-
-      {/* update form */}
+      {/* Table view order have status == "COMFIRMED ORDER" */}
+      <Table rowKey="_id" dataSource={orders} columns={columns} />
+      {/* update form for roles = directors, administrator, managers */}
       <Modal
         centered
         open={editFormVisible}
@@ -633,12 +441,6 @@ export default function Orders() {
           onFinish={onUpdateFinish}
           onFinishFailed={onUpdateFinishFailed}
           autoComplete="off"
-          disabled={
-            selectedRecord &&
-            selectedRecord.status === "WAITING CONFIRMATION ORDER"
-              ? false
-              : true
-          }
         >
           <div className="w-[80%]">
             {/* Created Date */}
@@ -659,6 +461,7 @@ export default function Orders() {
               label="Ngày giao"
               name="shippedDate"
               rules={[
+                { required: true, type: "Date", message: "Không để trống" },
                 { type: "date", message: "Ngày không hợp lệ" },
                 {
                   validate: {
@@ -709,12 +512,12 @@ export default function Orders() {
               <Select
                 options={[
                   {
-                    value: "WAITING CONFIRMATION ORDER",
-                    label: "Đang Chờ Xác Nhận",
+                    value: "SHIPPING CONFIRMATION",
+                    label: "Xác Nhận Vận Chuyển",
                   },
                   {
-                    value: "CONFIRMED ORDER",
-                    label: "Đã Xác Nhận Đơn Hàng",
+                    value: "DELIVERY IN PROGRESS",
+                    label: "Đang Giao Hàng",
                   },
                 ]}
               />
@@ -805,8 +608,54 @@ export default function Orders() {
           </div>
         </Form>
       </Modal>
-
-      <Table rowKey="_id" dataSource={orders} columns={columns} />
+      {/* form accept delivery success */}
+      <Modal
+        open={isOpenFormAccept}
+        title="Xác nhận đã giao hàng"
+        onOk={() => {
+          acceptForm.submit();
+        }}
+        onCancel={() => {
+          setIsOpenFormAccept(false);
+        }}
+        okText="Lưu thông tin"
+        cancelText="Đóng"
+      >
+        <Form
+          form={acceptForm}
+          name="accept-form"
+          labelCol={{ span: 10 }}
+          wrapperCol={{ span: 16 }}
+          onFinish={onDeliverySuccess}
+          onFinishFailed={onDeliverySuccessFailed}
+          autoComplete="off"
+        >
+          <div className="w-[80%]">
+            <Form.Item
+              label="Hình ảnh xác nhận"
+              name="file"
+              rules={[
+                {
+                  required: true,
+                  message: "Hình ảnh xác nhận không được để trống!",
+                },
+              ]}
+            >
+              <Upload
+                showUploadList={true}
+                beforeUpload={(file) => {
+                  setFile(file);
+                  return false;
+                }}
+              >
+                <Button>
+                  <UploadOutlined size={"20px"} />
+                </Button>
+              </Upload>
+            </Form.Item>
+          </div>
+        </Form>
+      </Modal>
     </div>
   );
 }

@@ -176,7 +176,10 @@ function GuestService() {
               label="Tên người dùng"
               name="fullName"
               rules={[
-                { required: true, message: "Please input name account!" },
+                {
+                  required: true,
+                  message: "Tên người dùng không được để trống!",
+                },
               ]}
             >
               <Input />
@@ -205,7 +208,7 @@ function GuestService() {
               name="email"
               rules={[
                 { required: true, message: "Email bắt buộc nhập!" },
-                { type: "email", message: `Invalid Email` },
+                { type: "email", message: `Đây không phải là một email` },
               ]}
             >
               <Input />

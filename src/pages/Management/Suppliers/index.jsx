@@ -100,12 +100,12 @@ function Suppliers() {
     axiosClient
       .post("/suppliers", values)
       .then((response) => {
-        message.success("Successfully Added");
+        message.success("Thêm thành công!");
         createForm.resetFields(); //reset input form
         setRefresh((f) => f + 1);
       })
       .catch((err) => {
-        message.error("Added Failed");
+        message.error("Thêm thất bại!");
       });
     console.log("👌👌👌", values);
   };
@@ -116,13 +116,13 @@ function Suppliers() {
     axiosClient
       .patch("/suppliers/" + selectedRecord._id, values)
       .then((response) => {
-        message.success("Successfully Updated!");
+        message.success("Cập nhật thành công!");
         updateForm.resetFields();
         setRefresh((f) => f + 1);
         setEditFormVisible(false);
       })
       .catch((err) => {
-        message.error("Updated Failed!");
+        message.error("Cập nhật thất bại!");
       });
   };
 
@@ -151,7 +151,12 @@ function Suppliers() {
           className=""
           label="Tên nhà cung cấp"
           name="name"
-          rules={[{ required: true, message: "Please input your first name!" }]}
+          rules={[
+            {
+              required: true,
+              message: "Tên nhà cung cấp không được để trống!",
+            },
+          ]}
         >
           <Input />
         </Form.Item>
@@ -163,8 +168,8 @@ function Suppliers() {
           label="Email"
           name="email"
           rules={[
-            { required: true, message: "Please input your email!" },
-            { type: "email", message: `Invalid Email` },
+            { required: true, message: "Email không được để trống!" },
+            { type: "email", message: `Đây không phải là một email!` },
           ]}
         >
           <Input />
@@ -177,7 +182,7 @@ function Suppliers() {
           label="Số điện thoại"
           name="phoneNumber"
           rules={[
-            { required: true, message: "Please input your phone number!" },
+            { required: true, message: "Số điện thoại không được để trống!" },
           ]}
         >
           <Input />
@@ -189,7 +194,7 @@ function Suppliers() {
           className=""
           label="Địa chỉ"
           name="address"
-          rules={[{ required: true, message: "Please input your address!" }]}
+          rules={[{ required: true, message: "Địa chỉ không được để trống!" }]}
         >
           <Input />
         </Form.Item>
@@ -233,7 +238,10 @@ function Suppliers() {
             label="Tên nhà cung cấp"
             name="name"
             rules={[
-              { required: true, message: "Please input your first name!" },
+              {
+                required: true,
+                message: "Tên nhà cung cấp không được để trống!",
+              },
             ]}
           >
             <Input />
@@ -246,8 +254,8 @@ function Suppliers() {
             label="Email"
             name="email"
             rules={[
-              { required: true, message: "Please input your email!" },
-              { type: "email", message: `Invalid Email` },
+              { required: true, message: "Email không được để trống!" },
+              { type: "email", message: `Đây không phải là một email` },
             ]}
           >
             <Input />
@@ -260,7 +268,7 @@ function Suppliers() {
             label="Số điện thoại"
             name="phoneNumber"
             rules={[
-              { required: true, message: "Please input your phone number!" },
+              { required: true, message: "Số điện thoại không được để trống!" },
             ]}
           >
             <Input />
@@ -272,7 +280,9 @@ function Suppliers() {
             className=""
             label="Địa chỉ"
             name="address"
-            rules={[{ required: true, message: "Please input your address!" }]}
+            rules={[
+              { required: true, message: "Địa chỉ không được để trống!" },
+            ]}
           >
             <Input />
           </Form.Item>

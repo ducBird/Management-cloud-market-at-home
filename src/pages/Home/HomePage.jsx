@@ -6,14 +6,6 @@ export default function HomePage() {
     <div>
       <div className="content text-center mt-5">
         <div className="text-2xl font-bold">💼 CLOUD MARKET AT HOME 💼</div>
-        {/* <div className="text-xl mt-5"> Chào ... </div> */}
-        <div className="text-xl mt-5">
-          🏠{" "}
-          <code>
-            Bạn đang ở Trang Chủ phần mềm quản lý Chợ Trên Mây Tại Nhà
-          </code>{" "}
-          🏠
-        </div>
       </div>
       <div className="logoImage text-center">
         <img

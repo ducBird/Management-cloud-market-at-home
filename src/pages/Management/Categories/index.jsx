@@ -150,25 +150,28 @@ function Categories() {
       });
   }, [refresh]);
 
-  const onFinish = (values) => {
-    axiosClient
+  const onFinish = async (values) => {
+    await axiosClient
       .post("/categories", values)
       .then((response) => {
-        //UPLOAD FILE
-        const { _id } = response.data;
-        const formData = new FormData();
-        formData.append("file", file);
-        axios
-          .post(`${API_URL}/upload-image/categories/${_id}`, formData)
-          .then((response) => {
-            // message.success("Tải lên hình ảnh thành công!");
-            createForm.resetFields();
-            setRefresh((f) => f + 1);
-          })
-          .catch((err) => {
-            message.error("Tải lên hình ảnh thất bại!");
-          });
-        message.success("Thêm thành công!");
+        if (values.file !== undefined) {
+          //UPLOAD FILE
+          const { _id } = response.data;
+          const formData = new FormData();
+          formData.append("file", file);
+          axios
+            .post(`${API_URL}/upload-image/categories/${_id}`, formData)
+            .then((response) => {
+              // createForm.resetFields();
+              createForm.resetFields();
+              setRefresh((f) => f + 1);
+              message.success("Thêm thành công!");
+            })
+            .catch((err) => {
+              message.error("Tải lên hình ảnh thất bại!");
+            });
+        }
+        setHiddenForm(true);
       })
       .catch((err) => {
         message.error("Thêm thất bại!");
@@ -185,20 +188,22 @@ function Categories() {
     axiosClient
       .patch("/categories/" + selectedRecord._id, values)
       .then((response) => {
-        const { _id } = response.data;
-        const formData = new FormData();
-        formData.append("file", file);
-        axios
-          .post(`${API_URL}/upload-image/categories/${_id}`, formData)
-          .then((response) => {
-            message.success("Cập nhật thành công!");
-            updateForm.resetFields();
-            setRefresh((f) => f + 1);
-            setEditFormVisible(false);
-          })
-          .catch((err) => {
-            message.error("Tải lên hình ảnh thất bại!");
-          });
+        if (values.file !== undefined) {
+          const { _id } = response.data;
+          const formData = new FormData();
+          formData.append("file", file);
+          console.log("file", file);
+          axios
+            .post(`${API_URL}/upload-image/categories/${_id}`, formData)
+            .then((response) => {
+              message.success("Cập nhật thành công!");
+              setRefresh((f) => f + 1);
+              setEditFormVisible(false);
+            })
+            .catch((err) => {
+              message.error("Tải lên hình ảnh thất bại!");
+            });
+        }
       })
       .catch((err) => {
         message.error("Cập nhật thất bại!");
@@ -259,13 +264,7 @@ function Categories() {
               <AiOutlinePlus size={"20px"} />
             </Upload>
           </Form.Item> */}
-          <Form.Item
-            label="Hình ảnh"
-            name="file"
-            rules={[
-              { required: true, message: "Hãy chọn hình ảnh cho danh mục!" },
-            ]}
-          >
+          <Form.Item label="Hình ảnh" name="file">
             <Upload
               showUploadList={true}
               // listType="picture-card"
@@ -318,7 +317,9 @@ function Categories() {
             className=""
             label="Tên danh mục"
             name="name"
-            rules={[{ required: true, message: "Please input name category!" }]}
+            rules={[
+              { required: true, message: "Tên danh mục không được để trống!" },
+            ]}
           >
             <Input />
           </Form.Item>
@@ -328,13 +329,7 @@ function Categories() {
             <TextArea rows={5} />
           </Form.Item>
 
-          <Form.Item
-            label="Hình ảnh"
-            name="file"
-            rules={[
-              { required: true, message: "Hãy chọn hình ảnh cho danh mục!" },
-            ]}
-          >
+          <Form.Item label="Hình ảnh" name="file">
             <Upload
               showUploadList={true}
               // listType="picture-card"

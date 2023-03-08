@@ -210,20 +210,23 @@ function Products() {
     axiosClient
       .post("/products", values)
       .then((response) => {
-        //UPLOAD FILE
-        const { _id } = response.data;
-        const formData = new FormData();
-        formData.append("file", file);
-        axios
-          .post(`${API_URL}/upload-image/products/${_id}`, formData)
-          .then((response) => {
-            // message.success("Tải lên hình ảnh thành công!");
-            createForm.resetFields();
-            setRefresh((f) => f + 1);
-          })
-          .catch((err) => {
-            message.error("Tải lên hình ảnh thất bại!");
-          });
+        if (values.file !== undefined) {
+          //UPLOAD FILE
+          const { _id } = response.data;
+          const formData = new FormData();
+          formData.append("file", file);
+          axios
+            .post(`${API_URL}/upload-image/products/${_id}`, formData)
+            .then((response) => {
+              // message.success("Tải lên hình ảnh thành công!");
+              // createForm.resetFields();
+            })
+            .catch((err) => {
+              message.error("Tải lên hình ảnh thất bại!");
+            });
+        }
+        createForm.resetFields();
+        setRefresh((f) => f + 1);
         message.success("Thêm thành công!");
       })
       .catch((err) => {
@@ -241,20 +244,22 @@ function Products() {
     axiosClient
       .patch("/products/" + selectedRecord._id, values)
       .then((response) => {
-        const { _id } = response.data;
-        const formData = new FormData();
-        formData.append("file", file);
-        axios
-          .post(`${API_URL}/upload-image/products/${_id}`, formData)
-          .then((response) => {
-            message.success("Cập nhật thành công!");
-            updateForm.resetFields();
-            setRefresh((f) => f + 1);
-            setEditFormVisible(false);
-          })
-          .catch((err) => {
-            message.error("Tải lên hình ảnh thất bại!");
-          });
+        if (values.file !== undefined) {
+          const { _id } = response.data;
+          const formData = new FormData();
+          formData.append("file", file);
+          axios
+            .post(`${API_URL}/upload-image/products/${_id}`, formData)
+            .then((response) => {
+              message.success("Cập nhật thành công!");
+            })
+            .catch((err) => {
+              message.error("Tải lên hình ảnh thất bại!");
+            });
+        }
+        updateForm.resetFields();
+        setRefresh((f) => f + 1);
+        setEditFormVisible(false);
       })
       .catch((err) => {
         message.error("Cập nhật thất bại!");
@@ -287,7 +292,12 @@ function Products() {
             className=""
             label="Danh mục"
             name="categoryId"
-            rules={[{ required: true, message: "Please selected category!" }]}
+            rules={[
+              {
+                required: true,
+                message: "Danh mục sản phẩm không được để trống!",
+              },
+            ]}
           >
             <Select
               options={
@@ -308,7 +318,9 @@ function Products() {
             className=""
             label="Tên sản phẩm"
             name="name"
-            rules={[{ required: true, message: "Please input product name!" }]}
+            rules={[
+              { required: true, message: "Tên sản phẩm không được để trống!" },
+            ]}
           >
             <Input />
           </Form.Item>
@@ -319,7 +331,9 @@ function Products() {
             className=""
             label="Giá tiền"
             name="price"
-            rules={[{ required: true, message: "Please input price!" }]}
+            rules={[
+              { required: true, message: "Giá tiền không được để trống!" },
+            ]}
           >
             <InputNumber className="w-[50%]" addonAfter="VND" />
           </Form.Item>
@@ -344,7 +358,9 @@ function Products() {
             className=""
             label="Nhà cung cấp"
             name="supplierId"
-            rules={[{ required: true, message: "Please selected suplier!" }]}
+            rules={[
+              { required: true, message: "Nhà cung cấp không được để trống!" },
+            ]}
           >
             <Select
               options={
@@ -365,13 +381,7 @@ function Products() {
           </Form.Item>
 
           {/* Hình ảnh */}
-          <Form.Item
-            label="Hình ảnh"
-            name="file"
-            rules={[
-              { required: true, message: "Hãy chọn hình ảnh cho sản phẩm!" },
-            ]}
-          >
+          <Form.Item label="Hình ảnh" name="file">
             <Upload
               showUploadList={true}
               // listType="picture-card"
@@ -425,7 +435,9 @@ function Products() {
             className=""
             label="Danh mục"
             name="categoryId"
-            rules={[{ required: true, message: "Please selected category!" }]}
+            rules={[
+              { required: true, message: "Danh mục không được để trống!" },
+            ]}
           >
             <Select
               options={
@@ -446,7 +458,9 @@ function Products() {
             className=""
             label="Tên sản phẩm"
             name="name"
-            rules={[{ required: true, message: "Please input product name!" }]}
+            rules={[
+              { required: true, message: "Tên sản phẩm không được để trống!" },
+            ]}
           >
             <Input />
           </Form.Item>
@@ -457,7 +471,9 @@ function Products() {
             className=""
             label="Giá tiền"
             name="price"
-            rules={[{ required: true, message: "Please input price!" }]}
+            rules={[
+              { required: true, message: "Giá tiền không được để trống!" },
+            ]}
           >
             <InputNumber className="w-[50%]" addonAfter="VND" />
           </Form.Item>
@@ -482,7 +498,9 @@ function Products() {
             className=""
             label="Nhà cung cấp"
             name="supplierId"
-            rules={[{ required: true, message: "Please selected suplier!" }]}
+            rules={[
+              { required: true, message: "Nhà cung cấp không được để trống!" },
+            ]}
           >
             <Select
               options={
@@ -503,13 +521,7 @@ function Products() {
           </Form.Item>
 
           {/* Hình ảnh */}
-          <Form.Item
-            label="Hình ảnh"
-            name="file"
-            rules={[
-              { required: true, message: "Hãy chọn hình ảnh cho sản phẩm!" },
-            ]}
-          >
+          <Form.Item label="Hình ảnh" name="file">
             <Upload
               showUploadList={true}
               // listType="picture-card"

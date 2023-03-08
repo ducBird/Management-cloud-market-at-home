@@ -6,26 +6,73 @@ import {
   AiOutlineLogin,
   AiOutlineLogout,
   AiOutlineUser,
+  AiOutlineCar,
 } from "react-icons/ai";
+import { FaWarehouse } from "react-icons/fa";
 import { MdOutlineManageAccounts } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
-import cmah_logo from "../../public/cloud-market.jpg";
+import cmah_logo from "../assets/logo/cloud-market.jpg";
 import { useUser } from "../hooks/useUser";
 import { API_URL } from "../constants/URLS";
-
-const items1 = [
-  { label: "Home", key: "home", icon: <AiOutlineHome /> }, // remember to pass the key prop
-  // { label: "Settings", key: "settings", icon: <AiOutlineSetting /> }, // which is required
-  {
-    label: "Management",
-    key: "management",
-    icon: <MdOutlineManageAccounts />,
-  },
-];
 
 export default function HeaderMenu() {
   const navigate = useNavigate();
   const { users } = useUser((state) => state);
+  const items1 = [
+    { label: "Trang Chủ", key: "home", icon: <AiOutlineHome /> }, // remember to pass the key prop
+    {
+      label: "Quản Trị",
+      key: "management",
+      icon: <MdOutlineManageAccounts />,
+      disabled:
+        users.roles &&
+        users.roles.some((role) => {
+          return (
+            role === "directors" ||
+            role === "administrator" ||
+            role === "managers" ||
+            role === "sales"
+          );
+        })
+          ? false
+          : true,
+    },
+    {
+      label: "Vận Chuyển",
+      key: "shipping",
+      icon: <AiOutlineCar />,
+      disabled:
+        users.roles &&
+        users.roles.some((role) => {
+          return (
+            role === "directors" ||
+            role === "administrator" ||
+            role === "managers" ||
+            role === "shipper"
+          );
+        })
+          ? false
+          : true,
+    }, // which is required
+    {
+      label: "Kho",
+      key: "warehouse",
+      icon: <FaWarehouse />,
+      disabled:
+        users.roles &&
+        users.roles.some((role) => {
+          return (
+            role === "directors" ||
+            role === "administrator" ||
+            role === "managers" ||
+            role === "warehouse"
+          );
+        })
+          ? false
+          : true,
+    }, // which is required
+    { label: "Cài Đặt", key: "settings", icon: <AiOutlineSetting /> }, // which is required
+  ];
 
   const ButtonLogin = (
     <button
@@ -77,7 +124,7 @@ export default function HeaderMenu() {
           items={items1}
           onClick={({ key, keyPath, domEvent }) => {
             navigate("/" + key.split("-").join("/"));
-            console.log(key);
+            // console.log(key);
           }}
         />
       </div>

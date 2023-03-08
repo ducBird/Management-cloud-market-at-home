@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   AiOutlineHome,
   AiOutlineSetting,
@@ -8,6 +8,7 @@ import {
   AiOutlineUserSwitch,
   AiOutlineMenuFold,
   AiOutlineMenuUnfold,
+  AiOutlineCar,
 } from "react-icons/ai";
 import {
   MdOutlineSupportAgent,
@@ -16,6 +17,7 @@ import {
   MdOutlineManageAccounts,
   MdOutlineCategory,
 } from "react-icons/md";
+import { FaWarehouse } from "react-icons/fa";
 
 import { RiLuggageDepositLine } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
@@ -32,16 +34,39 @@ export default function SiderMenu() {
       label: "Quản Trị",
       key: "management",
       icon: <MdOutlineManageAccounts />,
+      disabled:
+        users.roles &&
+        users.roles.some((role) => {
+          return (
+            role === "directors" ||
+            role === "administrator" ||
+            role === "managers" ||
+            role === "sales"
+          );
+        })
+          ? false
+          : true,
       children: [
-        {
-          label: "Tài khoản",
-          key: "management-accounts",
-          icon: <AiOutlineUser />,
-        },
+        // {
+        //   label: "Tài khoản",
+        //   key: "management-accounts",
+        //   icon: <AiOutlineUser />,
+        // },
         {
           label: "Danh mục",
           key: "management-categories",
           icon: <MdOutlineCategory />,
+          disabled:
+            users.roles &&
+            users.roles.some((role) => {
+              return (
+                role === "directors" ||
+                role === "administrator" ||
+                role === "managers"
+              );
+            })
+              ? false
+              : true,
         },
         {
           label: "Sản phẩm",
@@ -52,6 +77,17 @@ export default function SiderMenu() {
           label: "Khách hàng",
           key: "management-customers",
           icon: <MdOutlinePeopleAlt />,
+          disabled:
+            users.roles &&
+            users.roles.some((role) => {
+              return (
+                role === "directors" ||
+                role === "administrator" ||
+                role === "managers"
+              );
+            })
+              ? false
+              : true,
         },
         /* Làm ẩn đi MenuItem Nhân viên
         // {
@@ -110,6 +146,17 @@ export default function SiderMenu() {
           label: "Nhà cung cấp",
           key: "management-suppliers",
           icon: <RiLuggageDepositLine />,
+          disabled:
+            users.roles &&
+            users.roles.some((role) => {
+              return (
+                role === "directors" ||
+                role === "administrator" ||
+                role === "managers"
+              );
+            })
+              ? false
+              : true,
         },
         {
           label: "Chăm sóc KH",
@@ -122,26 +169,38 @@ export default function SiderMenu() {
       label: "Quản Lý Bán Hàng",
       key: "sales",
       icon: <AiOutlineDatabase />,
+      disabled:
+        users.roles &&
+        users.roles.some((role) => {
+          return (
+            role === "directors" ||
+            role === "administrator" ||
+            role === "managers" ||
+            role === "sales"
+          );
+        })
+          ? false
+          : true,
       children: [
         {
-          label: "Orders",
+          label: "Thống Kê",
           key: "orders",
           icon: <MdOutlineArticle />,
           children: [
             {
-              label: <span style={{}}>Order statistics by status</span>,
+              label: <span style={{}}>Trạng Thái</span>,
               key: "orders-status",
             },
             {
-              label: "Statistics by payment method",
+              label: "Hình Thức Thanh Toán",
               key: "orders-payment",
             },
             {
-              label: "Order statistics by revenue",
+              label: "Doanh Thu",
               key: "orders-revenue",
               children: [
                 {
-                  label: "Revenue statistics over time",
+                  label: "Theo Thời Gian",
                   key: "orders-revenue-overtime",
                 },
               ],
@@ -150,13 +209,68 @@ export default function SiderMenu() {
         },
       ],
     },
-    { label: "Cài Đặt", key: "settings", icon: <AiOutlineSetting /> }, // which is required
+    {
+      label: "Quản Lý Vận Chuyển",
+      key: "shipping",
+      icon: <AiOutlineCar />,
+      disabled:
+        users.roles &&
+        users.roles.some((role) => {
+          return (
+            role === "directors" ||
+            role === "administrator" ||
+            role === "managers" ||
+            role === "shipper"
+          );
+        })
+          ? false
+          : true,
+      children: [
+        {
+          label: "Chưa Vận Chuyển",
+          key: "shipping-unresolved",
+        },
+        {
+          label: "Đang Vận Chuyển",
+          key: "shipping-resolving",
+        },
+        {
+          label: "Đã Vận Chuyển",
+          key: "shipping-resolved",
+        },
+      ],
+    },
+    {
+      label: "Quản Lý Kho",
+      key: "warehouse",
+      icon: <FaWarehouse />,
+      disabled:
+        users.roles &&
+        users.roles.some((role) => {
+          return (
+            role === "directors" ||
+            role === "administrator" ||
+            role === "managers" ||
+            role === "warehouse"
+          );
+        })
+          ? false
+          : true,
+      children: [
+        {
+          label: "Đơn Đợi Vận Chuyển",
+          key: "warehouse-waitingpickup",
+        },
+      ],
+    },
+    { label: "Cài Đặt", key: "settings", icon: <AiOutlineSetting /> },
   ];
   // Sử dụng với Redux
   // const [collapsed, setCollapsed] = useState(false);
   // const toggleCollapsed = () => {
   //   setCollapsed(!collapsed);
   // };
+
   return (
     <div>
       <Menu
@@ -170,7 +284,7 @@ export default function SiderMenu() {
         items={itemsSider}
         onClick={({ key, keyPath, domEvent }) => {
           navigate("/" + key.split("-").join("/"));
-          console.log(key);
+          // console.log(key);
         }}
       />
       {/* <Button

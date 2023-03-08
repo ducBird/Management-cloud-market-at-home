@@ -44,8 +44,12 @@ function Customers() {
             {text && (
               <img
                 className="max-w-[150px] w-[30%] min-w-[70px]"
-                src={`${API_URL}${text}`}
-                alt="image-employee"
+                src={
+                  record.accountType === "email"
+                    ? `${API_URL}${text}`
+                    : `${record.avatar}`
+                }
+                alt="image-customer"
               />
             )}
           </div>
@@ -175,20 +179,23 @@ function Customers() {
     axiosClient
       .post("/customers", values)
       .then((response) => {
-        //UPLOAD FILE
-        const { _id } = response.data;
-        const formData = new FormData();
-        formData.append("file", file);
-        axios
-          .post(`${API_URL}/upload-image/customers/${_id}`, formData)
-          .then((response) => {
-            // message.success("Tải lên hình ảnh thành công!");
-            createForm.resetFields();
-            setRefresh((f) => f + 1);
-          })
-          .catch((err) => {
-            message.error("Tải lên hình ảnh thất bại!");
-          });
+        if (values.file !== undefined) {
+          //UPLOAD FILE
+          const { _id } = response.data;
+          const formData = new FormData();
+          formData.append("file", file);
+          axios
+            .post(`${API_URL}/upload-image/customers/${_id}`, formData)
+            .then((response) => {
+              // message.success("Tải lên hình ảnh thành công!");
+              // createForm.resetFields();
+            })
+            .catch((err) => {
+              message.error("Tải lên hình ảnh thất bại!");
+            });
+        }
+        createForm.resetFields();
+        setRefresh((f) => f + 1);
         message.success("Thêm thành công!");
       })
       .catch((err) => {
@@ -206,7 +213,20 @@ function Customers() {
     axiosClient
       .patch("/customers/" + selectedRecord._id, values)
       .then((response) => {
-        message.success("Cập nhật thành công!");
+        if (values.file !== undefined) {
+          //UPLOAD FILE
+          const { _id } = response.data;
+          const formData = new FormData();
+          formData.append("file", file);
+          axios
+            .post(`${API_URL}/upload-image/customers/${_id}`, formData)
+            .then((response) => {
+              message.success("Tải lên hình ảnh thành công!");
+            })
+            .catch((err) => {
+              message.error("Tải lên hình ảnh thất bại!");
+            });
+        }
         updateForm.resetFields();
         setRefresh((f) => f + 1);
         setEditFormVisible(false);
@@ -244,7 +264,7 @@ function Customers() {
             label="Họ - Tên Đệm"
             name="firstName"
             rules={[
-              { required: true, message: "Please input your first name!" },
+              { required: true, message: "Họ - Tên đệm không được để trống!" },
             ]}
           >
             <Input />
@@ -256,9 +276,7 @@ function Customers() {
             className=""
             label="Tên"
             name="lastName"
-            rules={[
-              { required: true, message: "Please input your last name!" },
-            ]}
+            rules={[{ required: true, message: "Tên không được để trống!" }]}
           >
             <Input />
           </Form.Item>
@@ -270,8 +288,8 @@ function Customers() {
             label="Email"
             name="email"
             rules={[
-              { required: true, message: "Please input your email!" },
-              { type: "email", message: `Invalid Email` },
+              { required: true, message: "Email không được để trống!" },
+              { type: "email", message: `Đây không phải một email!` },
             ]}
           >
             <Input />
@@ -283,7 +301,9 @@ function Customers() {
             className=""
             label="Mật khẩu"
             name="password"
-            rules={[{ required: true, message: "Please input your password!" }]}
+            rules={[
+              { required: true, message: "Mật khẩu không được để trống!" },
+            ]}
           >
             <Input.Password />
           </Form.Item>
@@ -309,7 +329,9 @@ function Customers() {
             className=""
             label="Địa chỉ"
             name="address"
-            rules={[{ required: true, message: "Please input your address!" }]}
+            rules={[
+              { required: true, message: "Địa chỉ không được để trống!" },
+            ]}
           >
             <Input />
           </Form.Item>
@@ -321,7 +343,7 @@ function Customers() {
 
           <Form.Item label="Trạng thái" name="active">
             <Select
-              // defaultValue={true}
+              defaultValue={"true"}
               options={[
                 {
                   value: "true",
@@ -339,20 +361,15 @@ function Customers() {
             <Checkbox.Group
               options={[
                 {
-                  label: "customer",
+                  label: "Khách hàng",
                   value: "customer",
                 },
               ]}
+              defaultValue={["customer"]}
             />
           </Form.Item>
 
-          <Form.Item
-            label="Hình ảnh"
-            name="file"
-            rules={[
-              { required: true, message: "Hãy chọn hình ảnh cho khách hàng!" },
-            ]}
-          >
+          <Form.Item label="Hình ảnh" name="file">
             <Upload
               showUploadList={true}
               // listType="picture-card"
@@ -407,7 +424,7 @@ function Customers() {
             label="Họ - Tên Đệm"
             name="firstName"
             rules={[
-              { required: true, message: "Please input your first name!" },
+              { required: true, message: "Họ - Tên đệm không được để trống!" },
             ]}
           >
             <Input />
@@ -419,9 +436,7 @@ function Customers() {
             className=""
             label="Tên"
             name="lastName"
-            rules={[
-              { required: true, message: "Please input your last name!" },
-            ]}
+            rules={[{ required: true, message: "Tên không được để trống!" }]}
           >
             <Input />
           </Form.Item>
@@ -433,8 +448,8 @@ function Customers() {
             label="Email"
             name="email"
             rules={[
-              { required: true, message: "Please input your email!" },
-              { type: "email", message: `Invalid Email` },
+              { required: true, message: "Email không được để trống!" },
+              { type: "email", message: `Email không hợp lệ!` },
             ]}
           >
             <Input />
@@ -446,7 +461,9 @@ function Customers() {
             className=""
             label="Mật khẩu"
             name="password"
-            rules={[{ required: true, message: "Please input your password!" }]}
+            rules={[
+              { required: true, message: "Mật khẩu không được để trống!" },
+            ]}
           >
             <Input.Password />
           </Form.Item>
@@ -458,7 +475,7 @@ function Customers() {
             label="Số điện thoại"
             name="phoneNumber"
             rules={[
-              { required: true, message: "Please input your phone number!" },
+              { required: true, message: "Số điện thoại không được để trống!" },
             ]}
           >
             <Input />
@@ -470,7 +487,9 @@ function Customers() {
             className=""
             label="Địa chỉ"
             name="address"
-            rules={[{ required: true, message: "Please input your address!" }]}
+            rules={[
+              { required: true, message: "Địa chỉ không được để trống!" },
+            ]}
           >
             <Input />
           </Form.Item>
@@ -482,7 +501,7 @@ function Customers() {
 
           <Form.Item label="Trạng thái" name="active">
             <Select
-              // defaultValue={true}
+              defaultValue={"true"}
               options={[
                 {
                   value: "true",
@@ -500,11 +519,26 @@ function Customers() {
             <Checkbox.Group
               options={[
                 {
-                  label: "customer",
+                  label: "Khách hàng",
                   value: "customer",
                 },
               ]}
             />
+          </Form.Item>
+
+          <Form.Item label="Hình ảnh" name="file">
+            <Upload
+              showUploadList={true}
+              // listType="picture-card"
+              beforeUpload={(file) => {
+                setFile(file);
+                return false;
+              }}
+            >
+              <div className="flex justify-center items-center w-[100px] h-[100px] border border-dashed rounded-lg hover:cursor-pointer hover:border-blue-400 hover:bg-white transition-all ease-in duration-150">
+                <AiOutlinePlus size={"20px"} />
+              </div>
+            </Upload>
           </Form.Item>
         </Form>
       </Modal>
