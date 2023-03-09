@@ -13,13 +13,16 @@ import {
 } from "antd";
 
 import { AiFillEdit, AiFillDelete, AiOutlinePlus } from "react-icons/ai";
+import { FaTrashRestore } from "react-icons/fa";
 import TextArea from "antd/lib/input/TextArea";
 import axios from "axios";
 import moment from "moment";
 
 function GuestService() {
   const [guestServices, setGuestServices] = useState([]);
+  const [isDelete, setIsDelete] = useState([]);
   const [refresh, setRefresh] = useState(0);
+  const [editFormDelete, setEditFormDelete] = useState(false);
   const [editFormVisible, setEditFormVisible] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
 
@@ -79,7 +82,7 @@ function GuestService() {
               onConfirm={() => {
                 const id = record._id;
                 axiosClient
-                  .delete("/guestServices/" + id)
+                  .patch("/guestServices/" + id, { isDelete: true })
                   .then((response) => {
                     message.success("Xóa thành công!");
                     setRefresh((f) => f + 1);
@@ -102,13 +105,124 @@ function GuestService() {
       },
     },
   ];
+  const isColumns = [
+    {
+      title: "Tên người dùng",
+      dataIndex: "fullName",
+      key: "fullName",
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+    },
+    {
+      title: "Số điện thoại",
+      dataIndex: "phoneNumber",
+      key: "phoneNumber",
+    },
+    {
+      title: "Lời nhắn",
+      dataIndex: "message",
+      key: "message",
+    },
+    {
+      title: "Phản hồi",
+      dataIndex: "isRequest",
+      key: "isRequest",
+      render: (text) => {
+        return text ? (
+          <span className="text-green-700 font-bold">Đã phản hồi</span>
+        ) : (
+          <span className="text-red-700 font-bold">Chưa phản hồi</span>
+        );
+      },
+    },
+    {
+      title: "",
+      key: "actions",
+      render: (text, record) => {
+        return (
+          <div className="flex gap-5 items-center ">
+            {/* Button Delete */}
+            <Popconfirm
+              title="Bạn có chắc muốn xóa dòng này không?"
+              onConfirm={() => {
+                const id = record._id;
+                axiosClient
+                  .delete("/guestServices/" + id)
+                  .then((response) => {
+                    message.success("Xóa thành công!");
+                    setRefresh((f) => f + 1);
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                    message.error("Xóa thất bại!");
+                  });
+              }}
+              onCancel={() => {}}
+              okText="Có"
+              cancelText="Không"
+            >
+              <Button danger className="flex items-center rounded-2xl">
+                Xóa
+                {<AiFillDelete size={"16px"} />}
+              </Button>
+            </Popconfirm>
+            <Button
+              onClick={() => {
+                const id = record._id;
+                console.log("id", id);
+                axiosClient
+                  .patch("/guestServices/" + id, { isDelete: false })
+                  .then((response) => {
+                    setRefresh((f) => f + 1);
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                    message.error("Thất bại !!!");
+                  });
+              }}
+              className="flex items-center bg-blue-400 rounded-2xl text-white"
+            >
+              <FaTrashRestore size={"16px"} style={{ marginRight: "5px" }} />
+              Restore
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
 
   useEffect(() => {
     axiosClient
       .get("/guestServices")
       .then((response) => {
+        let array = [];
+        response.data.map((guest) => {
+          if (guest.isDelete === false) {
+            array.push(guest);
+          }
+        });
         // console.log(response.data);
-        setGuestServices(response.data);
+        setGuestServices(array);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, [refresh]);
+  useEffect(() => {
+    axiosClient
+      .get("/guestServices")
+      .then((response) => {
+        let array = [];
+        response.data.map((guest) => {
+          if (guest.isDelete === true) {
+            array.push(guest);
+          }
+        });
+        // console.log(response.data);
+        setIsDelete(array);
       })
       .catch((err) => {
         console.log(err);
@@ -140,7 +254,17 @@ function GuestService() {
       <h1 className="text-center p-2 mb-5 text-xl">
         👩‍🔧 Chăm Sóc Khách Hàng 👨‍🔧
       </h1>
-
+      <div className="flex justify-end  ">
+        <Button
+          danger
+          className=" flex items-center mb-3"
+          onClick={() => {
+            setEditFormDelete(true);
+          }}
+        >
+          Nơi lưu danh mục đã xóa <AiFillDelete size={"20px"} />
+        </Button>
+      </div>
       <Table rowKey={"_id"} dataSource={guestServices} columns={columns} />
 
       <Modal
@@ -233,6 +357,19 @@ function GuestService() {
             </Form.Item>
           </div>
         </Form>
+      </Modal>
+      <Modal
+        centered
+        width={"80%"}
+        title="Danh mục tạm thời xóa"
+        open={editFormDelete}
+        onCancel={() => {
+          setEditFormDelete(false);
+        }}
+        okText="Lưu thay đổi"
+        cancelText="Thoát"
+      >
+        <Table rowKey={"_id"} dataSource={isDelete} columns={isColumns} />
       </Modal>
     </>
   );

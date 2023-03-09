@@ -22,14 +22,17 @@ import {
   AiOutlineLoading,
   AiFillQuestionCircle,
 } from "react-icons/ai";
+import { FaTrashRestore } from "react-icons/fa";
 import "./customers.css";
 import axios from "axios";
 import moment from "moment";
 
 function Customers() {
   const [customers, setCustomers] = useState([]);
+  const [isDelete, setIsDelete] = useState([]);
   const [refresh, setRefresh] = useState(0);
   const [editFormVisible, setEditFormVisible] = useState(false);
+  const [editFormDelete, setEditFormDelete] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [file, setFile] = useState();
 
@@ -141,7 +144,7 @@ function Customers() {
               onConfirm={() => {
                 const id = record._id;
                 axiosClient
-                  .delete("/customers/" + id)
+                  .patch("/customers/" + id, { isDelete: true })
                   .then((response) => {
                     message.success("Xóa thành công!");
                     setRefresh((f) => f + 1);
@@ -164,11 +167,156 @@ function Customers() {
       },
     },
   ];
+  const isColumns = [
+    {
+      title: "",
+      dataIndex: "avatar",
+      key: "avatar",
+      render: (text, record) => {
+        return (
+          <div className="text-center">
+            {text && (
+              <img
+                className="max-w-[150px] w-[30%] min-w-[70px]"
+                src={`${API_URL}${text}`}
+                alt="image-employee"
+              />
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      title: "Họ Và Tên",
+      dataIndex: "fullName",
+      key: "fullName",
+      width: "20%",
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+    },
+    {
+      title: "SĐT",
+      dataIndex: "phoneNumber",
+      key: "phoneNumber",
+    },
+    {
+      title: "Ngày Sinh",
+      dataIndex: "birthDay",
+      key: "birthDay",
+      render: (text) => {
+        return <span>{moment(text).format("DD/MM/yyyy")}</span>;
+      },
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "active",
+      key: "active",
+      width: "10%",
+      render: (text) => {
+        return text ? (
+          <span className="text-green-700 font-bold">Kích hoạt</span>
+        ) : (
+          <span className="text-red-700 font-bold">Thu hồi</span>
+        );
+      },
+    },
+    {
+      title: "",
+      key: "actions",
+      width: "1%",
+      render: (text, record) => {
+        return (
+          <div className="flex gap-5">
+            {/* Button Delete */}
+            <Popconfirm
+              icon={
+                <AiFillQuestionCircle size={"24px"} className="text-red-600" />
+              }
+              title="Bạn có chắc muốn xóa khách hàng này không?"
+              onConfirm={() => {
+                const id = record._id;
+                axiosClient
+                  .delete("/customers/" + id)
+                  .then((response) => {
+                    message.success("Xóa thành công!");
+                    setRefresh((f) => f + 1);
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                    message.error("Xóa thất bại!");
+                  });
+              }}
+              onCancel={() => {}}
+              okText="Có"
+              cancelText="Không"
+            >
+              <Button danger className=" flex items-center rounded-2xl ">
+                {" "}
+                <AiFillDelete size={"16px"} style={{ marginRight: "5px" }} />
+                Xóa
+              </Button>
+            </Popconfirm>
+            <Button
+              onClick={() => {
+                const id = record._id;
+                console.log("id", id);
+                axiosClient
+                  .patch("/customers/" + id, { isDelete: false })
+                  .then((response) => {
+                    setRefresh((f) => f + 1);
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                    message.error("Thất bại !!!");
+                  });
+              }}
+              className="flex items-center bg-blue-400 rounded-2xl text-white"
+            >
+              <FaTrashRestore size={"16px"} style={{ marginRight: "5px" }} />
+              Restore
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
 
   useEffect(() => {
-    axiosClient.get("/customers").then((response) => {
-      setCustomers(response.data);
-    });
+    axiosClient
+      .get("/customers")
+      .then((response) => {
+        let array = [];
+        response.data.map((cust) => {
+          if (cust.isDelete === false) {
+            array.push(cust);
+          }
+        });
+        // console.log(response.data);
+        setCustomers(array);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, [refresh]);
+  useEffect(() => {
+    axiosClient
+      .get("/customers")
+      .then((response) => {
+        let array = [];
+        response.data.map((cust) => {
+          if (cust.isDelete === true) {
+            array.push(cust);
+          }
+        });
+        // console.log(response.data);
+        setIsDelete(array);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }, [refresh]);
 
   const onFinish = (values) => {
@@ -369,9 +517,20 @@ function Customers() {
 
           {/* Button Save */}
           <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-            <Button type="primary" htmlType="submit">
-              Lưu
-            </Button>
+            <div className="flex justify-between">
+              <Button type="primary" htmlType="submit">
+                Lưu
+              </Button>
+              <Button
+                danger
+                className="text-right flex items-center"
+                onClick={() => {
+                  setEditFormDelete(true);
+                }}
+              >
+                Nơi lưu danh mục đã xóa <AiFillDelete size={"20px"} />
+              </Button>
+            </div>
           </Form.Item>
         </div>
       </Form>
@@ -507,6 +666,19 @@ function Customers() {
             />
           </Form.Item>
         </Form>
+      </Modal>
+      <Modal
+        centered
+        width={"80%"}
+        title="Danh mục tạm thời xóa"
+        open={editFormDelete}
+        onCancel={() => {
+          setEditFormDelete(false);
+        }}
+        okText="Lưu thay đổi"
+        cancelText="Thoát"
+      >
+        <Table rowKey={"_id"} dataSource={isDelete} columns={isColumns} />
       </Modal>
     </>
   );

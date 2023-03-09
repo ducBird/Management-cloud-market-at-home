@@ -18,6 +18,7 @@ import {
   AiOutlineLoading,
   AiFillQuestionCircle,
 } from "react-icons/ai";
+import { FaTrashRestore } from "react-icons/fa";
 import "./categories.css";
 import axios from "axios";
 import moment from "moment";
@@ -26,8 +27,10 @@ import { API_URL } from "../../../constants/URLS";
 
 function Categories() {
   const [categories, setCategories] = useState([]);
+  const [isDelete, setIsDelete] = useState([]);
   const [refresh, setRefresh] = useState(0);
   const [editFormVisible, setEditFormVisible] = useState(false);
+  const [editFormDelete, setEditFormDelete] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [file, setFile] = useState();
 
@@ -114,7 +117,7 @@ function Categories() {
               onConfirm={() => {
                 const id = record._id;
                 axiosClient
-                  .delete("/categories/" + id)
+                  .patch("/categories/" + id, { isDelete: true })
                   .then((response) => {
                     message.success("Xóa thành công!");
                     setRefresh((f) => f + 1);
@@ -137,19 +140,128 @@ function Categories() {
       },
     },
   ];
+  const isColumns = [
+    {
+      title: "",
+      dataIndex: "imageURL",
+      key: "imageURL",
+      width: "20%",
+      render: (text, record) => {
+        return (
+          <div className="text-center">
+            {text && (
+              <img
+                className="max-w-[150px] w-[30%] min-w-[70px]"
+                src={`${API_URL}${text}`}
+                alt=""
+              />
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      title: "Tên Danh Mục",
+      dataIndex: "name",
+      key: "name",
+      width: "15%",
+    },
+    {
+      title: "Mô tả",
+      dataIndex: "description",
+      key: "description",
+      width: "50%",
+    },
+    {
+      title: " Chức năng",
+      width: "20%",
+      render: (text, record) => {
+        return (
+          <div className="flex">
+            <Popconfirm
+              icon={
+                <AiFillQuestionCircle size={"24px"} className="text-red-600" />
+              }
+              title="Bạn có chắc muốn xóa vĩnh viễn danh mục này không?"
+              onConfirm={() => {
+                const id = record._id;
+                axiosClient
+                  .delete("/categories/" + id)
+                  //{isDelete:true là mình sẽ lấy giá trị isDelete và xét nó về giá trị true}
+                  .then((response) => {
+                    message.success("Đã xóa thành công");
+                    setRefresh((f) => f + 1);
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                    message.error("Thất bại !!!");
+                  });
+              }}
+              onCancel={() => {}}
+              okText="Có"
+              cancelText="Không"
+            >
+              <Button danger className=" flex items-center rounded-2xl mr-3">
+                {" "}
+                <AiFillDelete size={"16px"} style={{ marginRight: "5px" }} />
+                Xóa
+              </Button>
+            </Popconfirm>
+            <Button
+              onClick={() => {
+                const id = record._id;
+                console.log("id", id);
+                axiosClient
+                  .patch("/categories/" + id, { isDelete: false })
+                  .then((response) => {
+                    setRefresh((f) => f + 1);
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                    message.error("Thất bại !!!");
+                  });
+              }}
+              className="flex items-center bg-blue-400 rounded-2xl text-white"
+            >
+              <FaTrashRestore size={"16px"} style={{ marginRight: "5px" }} />
+              Restore
+            </Button>
+          </div>
+        );
+      },
+    },
+    {},
+  ];
 
   useEffect(() => {
     axiosClient
       .get("/categories")
       .then((response) => {
+        let array = [];
+        response.data.map((cate) => {
+          if (cate.isDelete === false) {
+            array.push(cate);
+          }
+        });
         // console.log(response.data);
-        setCategories(response.data);
+        setCategories(array);
       })
       .catch((err) => {
         console.log(err);
       });
   }, [refresh]);
 
+  useEffect(() => {
+    axiosClient.get("/categories").then((response) => {
+      let array = [];
+      response.data.map((cate) => {
+        if (cate.isDelete === true) {
+          array.push(cate);
+        }
+      });
+      setIsDelete(array);
+    });
+  }, [refresh]);
   const onFinish = (values) => {
     axiosClient
       .post("/categories", values)
@@ -281,9 +393,20 @@ function Categories() {
           </Form.Item>
 
           <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-            <Button type="primary" htmlType="submit">
-              Lưu
-            </Button>
+            <div className="flex justify-between">
+              <Button type="primary" htmlType="submit">
+                Lưu
+              </Button>
+              <Button
+                danger
+                className="text-right flex items-center"
+                onClick={() => {
+                  setEditFormDelete(true);
+                }}
+              >
+                Nơi lưu danh mục đã xóa <AiFillDelete size={"20px"} />
+              </Button>
+            </div>
           </Form.Item>
         </div>
       </Form>
@@ -349,6 +472,19 @@ function Categories() {
             </Upload>
           </Form.Item>
         </Form>
+      </Modal>
+      <Modal
+        centered
+        width={"80%"}
+        title="Danh mục tạm thời xóa"
+        open={editFormDelete}
+        onCancel={() => {
+          setEditFormDelete(false);
+        }}
+        okText="Lưu thay đổi"
+        cancelText="Thoát"
+      >
+        <Table rowKey={"_id"} dataSource={isDelete} columns={isColumns} />
       </Modal>
     </>
   );
