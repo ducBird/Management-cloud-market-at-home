@@ -101,7 +101,7 @@ export default function HeaderMenu() {
       <button
         onClick={() => {
           localStorage.clear();
-          window.location.href = "/account";
+          window.location.href = "/";
         }}
         className="flex items-center leading-none py-2 px-4 bg-white text-red-700 rounded hover:cursor-pointer hover:rounded-xl hover:scale-110 hover:transition-all ease-in-out duration-300"
       >

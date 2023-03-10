@@ -28,8 +28,10 @@ import { useUser } from "../../../hooks/useUser";
 
 function Employees() {
   const [employees, setEmployees] = useState([]);
+  const [isDelete, setIsDelete] = useState([]);
   const [refresh, setRefresh] = useState(0);
   const [editFormVisible, setEditFormVisible] = useState(false);
+  const [editFormDelete, setEditFormDelete] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [file, setFile] = useState();
   const { users } = useUser((state) => state);
@@ -178,7 +180,7 @@ function Employees() {
               onConfirm={() => {
                 const id = record._id;
                 axiosClient
-                  .delete("/employees/" + id)
+                  .patch("/employees/" + id, { isDelete: true })
                   .then((response) => {
                     message.success("Xóa thành công!");
                     setRefresh((f) => f + 1);

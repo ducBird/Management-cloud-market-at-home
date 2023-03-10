@@ -20,6 +20,7 @@ import {
   AiOutlinePlus,
   AiOutlineLoading,
 } from "react-icons/ai";
+import { FaTrashRestore } from "react-icons/fa";
 import "./products.css";
 import axios from "axios";
 import moment from "moment";
@@ -28,7 +29,9 @@ import { API_URL } from "../../../constants/URLS";
 import TextArea from "antd/lib/input/TextArea";
 function Products() {
   const [products, setProducts] = useState([]);
+  const [isDelete, setIsDelete] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [editFormDelete, setEditFormDelete] = useState(false);
   const [suppliers, setSuppliers] = useState([]);
   const [refresh, setRefresh] = useState(0);
   const [editFormVisible, setEditFormVisible] = useState(false);
@@ -163,6 +166,90 @@ function Products() {
               onConfirm={() => {
                 const id = record._id;
                 axiosClient
+                  .patch("/products/" + id, { isDelete: true })
+                  .then((response) => {
+                    message.success("Xóa thành công!");
+                    setRefresh((f) => f + 1);
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                    message.error("Xóa thất bại!");
+                  });
+              }}
+              onCancel={() => {}}
+              okText="Có"
+              cancelText="Không"
+            >
+              <Button danger className=" py-5 flex items-center ">
+                {" "}
+                <AiFillDelete size={"16px"} style={{ marginRight: "5px" }} />
+                Xóa
+              </Button>
+            </Popconfirm>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const isColumns = [
+    {
+      title: "Tên sản phẩm",
+      dataIndex: "name",
+      key: "name",
+      width: "15%",
+      render: (text) => {
+        return <strong>{text}</strong>;
+      },
+    },
+    {
+      title: "Giá",
+      dataIndex: "price",
+      key: "price",
+      render: (text) => {
+        return <span>{numeral(text).format("0,0$")}</span>;
+      },
+    },
+    {
+      title: "Giảm",
+      dataIndex: "discount",
+      key: "discount",
+      render: (text) => {
+        return <span>{numeral(text).format("0,0.0")}%</span>;
+      },
+    },
+    {
+      title: "Tồn kho",
+      dataIndex: "stock",
+      key: "stock",
+      render: (text) => {
+        return <span>{numeral(text).format("0,0.0")}</span>;
+      },
+    },
+    // {
+    //   title: 'Nhà cung cấp',
+    //   dataIndex: 'supplier',
+    //   key: 'supplier',
+    //   render: (text, record) => {
+    //     return <strong>{record?.supplier?.name}</strong>;
+    //   },
+    // },
+    {
+      title: "",
+      key: "actions",
+      width: "1%",
+      render: (text, record) => {
+        return (
+          <div className="flex gap-5">
+            {/* Button Delete */}
+            <Popconfirm
+              icon={
+                <AiFillQuestionCircle size={"24px"} className="text-red-600" />
+              }
+              title="Bạn có chắc muốn xóa sản phẩm này không?"
+              onConfirm={() => {
+                const id = record._id;
+                axiosClient
                   .delete("/products/" + id)
                   .then((response) => {
                     message.success("Xóa thành công!");
@@ -177,20 +264,77 @@ function Products() {
               okText="Có"
               cancelText="Không"
             >
-              <Button className="py-5 flex items-center" danger>
-                {<AiFillDelete size={"16px"} />}
+              <Button danger className=" flex items-center rounded-2xl">
+                {" "}
+                <AiFillDelete size={"16px"} style={{ marginRight: "5px" }} />
+                Xóa
               </Button>
             </Popconfirm>
+            <Button
+              onClick={() => {
+                const id = record._id;
+                console.log("id", id);
+                axiosClient
+                  .patch("/products/" + id, { isDelete: false })
+                  .then((response) => {
+                    setRefresh((f) => f + 1);
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                    message.error("Thất bại !!!");
+                  });
+              }}
+              className="flex items-center bg-blue-400 rounded-2xl text-white"
+            >
+              <FaTrashRestore size={"16px"} style={{ marginRight: "5px" }} />
+              Restore
+            </Button>
           </div>
         );
       },
     },
   ];
+  // useEffect(() => {
+  //   axiosClient.get("/products").then((response) => {
+  //     let array = [];
+  //     setProducts(response.data);
+  //   });
+  // }, [refresh]);
 
   useEffect(() => {
-    axiosClient.get("/products").then((response) => {
-      setProducts(response.data);
-    });
+    axiosClient
+      .get("/products")
+      .then((response) => {
+        let array = [];
+        // console.log(response.data);
+        response.data.map((prod) => {
+          if (prod.isDelete === false) {
+            array.push(prod);
+          }
+        });
+        // console.log(response.data);
+        setProducts(array);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, [refresh]);
+  useEffect(() => {
+    axiosClient
+      .get("/products")
+      .then((response) => {
+        let array = [];
+        response.data.map((prod) => {
+          // console.log(response.data);
+          if (prod.isDelete === true) {
+            array.push(prod);
+          }
+        });
+        setIsDelete(array);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }, [refresh]);
 
   // get list categories
@@ -336,7 +480,6 @@ function Products() {
             >
               <Input />
             </Form.Item>
-
             {/* Giá tiền */}
             <Form.Item
               hasFeedback
@@ -644,6 +787,15 @@ function Products() {
           </div>
         </Form>
       </Modal>
+      <Button
+        danger
+        className="text-right flex items-center"
+        onClick={() => {
+          setEditFormDelete(true);
+        }}
+      >
+        Nơi lưu danh mục đã xóa <AiFillDelete size={"20px"} />
+      </Button>
 
       <Table rowKey="_id" dataSource={products} columns={columns} />
 
@@ -828,6 +980,18 @@ function Products() {
             </Upload>
           </Form.Item>
         </Form>
+      </Modal>
+      <Modal
+        centered
+        title="Danh mục tạm thời xóa"
+        open={editFormDelete}
+        onCancel={() => {
+          setEditFormDelete(false);
+        }}
+        okText="Lưu thay đổi"
+        cancelText="Thoát"
+      >
+        <Table rowKey={"_id"} dataSource={isDelete} columns={isColumns} />
       </Modal>
     </>
   );
