@@ -57,7 +57,7 @@ export default function Login() {
             { type: "email", message: "Đây không phải là một email" },
           ]}
         >
-          <Input placeholder="Your email" />
+          <Input placeholder="Nhập email của bạn" />
         </Form.Item>
 
         <Form.Item
@@ -72,7 +72,7 @@ export default function Login() {
             },
           ]}
         >
-          <Input.Password placeholder="Your password" />
+          <Input.Password placeholder="Nhập mật khẩu của bạn" />
         </Form.Item>
 
         <Form.Item

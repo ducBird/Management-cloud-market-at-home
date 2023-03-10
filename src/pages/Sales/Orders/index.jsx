@@ -48,6 +48,39 @@ export default function Orders() {
     });
   }, [refresh]);
 
+  // get list employees have roles is "shipper"
+  React.useEffect(() => {
+    let shippers = [];
+    axiosClient.get("/employees").then((response) => {
+      response.data.map((shipper) => {
+        if (shipper.roles.includes("shipper")) {
+          shippers.push(shipper);
+        }
+      });
+      setEmployees(shippers);
+    });
+  }, []);
+
+  const renderStatus = (result) => {
+    return (
+      <div>
+        {result && result === "WAITING CONFIRMATION ORDER"
+          ? "Đang Chờ Xác Nhận"
+          : result === "CONFIRMED ORDER"
+          ? "Đã Xác Nhận Đơn Hàng"
+          : result === "SHIPPING CONFIRMATION"
+          ? "Xác Nhận Vận Chuyển"
+          : result === "DELIVERY IN PROGRESS"
+          ? "Đang Giao Hàng"
+          : result === "DELIVERY SUCCESS"
+          ? "Giao Hàng Thành Công"
+          : result === "RECEIVED ORDER"
+          ? "Đã Nhận Hàng"
+          : "Đã Hủy Đơn Hàng"}
+      </div>
+    );
+  };
+
   const productColumns = [
     {
       title: "Số lượng",
@@ -152,6 +185,9 @@ export default function Orders() {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      render: (text, record) => {
+        return renderStatus(text);
+      },
     },
     {
       title: "Nhân viên",
@@ -195,7 +231,7 @@ export default function Orders() {
               setSelectedOrder(record);
             }}
           >
-            Select
+            Xem
           </Button>
         );
       },
@@ -221,24 +257,24 @@ export default function Orders() {
             />
             {/* delete */}
             <Popconfirm
-              title="Bạn có muốn hủy đơn hàng không"
+              title="Bạn có muốn hủy đơn hàng không?"
               onConfirm={() => {
                 //delete
                 const id = record._id;
                 axiosClient
                   .delete("/orders/" + id)
                   .then((response) => {
-                    message.success("Hủy đơn hàng thành công");
+                    message.success("Hủy đơn hàng thành công!");
                     setRefresh((pre) => pre + 1);
                   })
                   .catch((err) => {
-                    message.error("Hủy đơn hàng thất bại");
+                    message.error("Hủy đơn hàng thất bại!");
                   });
                 console.log("delete", record);
               }}
               onCancel={() => {}}
-              okText="Yes"
-              cancelText="No"
+              okText="Có"
+              cancelText="Không"
             >
               <Button danger icon={<DeleteOutlined />} />
             </Popconfirm>
@@ -254,15 +290,8 @@ export default function Orders() {
   const [createForm] = Form.useForm();
   // update form
   const [updateForm] = Form.useForm();
-
+  // search form
   const [searchForm] = Form.useForm();
-
-  // get list employees
-  React.useEffect(() => {
-    axiosClient.get("/employees").then((response) => {
-      setEmployees(response.data);
-    });
-  }, []);
 
   // tạo mới form
   const onFinish = (values) => {
@@ -350,8 +379,7 @@ export default function Orders() {
   };
   return (
     <div>
-      <h1 className="text-center p-2 mb-5 text-xl">📑 Orders 📑</h1>
-
+      <h1 className="text-center p-2 mb-5 text-xl">📑 Quản Lý Đơn Hàng 📑</h1>
       {/* Tìm kiếm đơn hàng */}
       <div className="border border-solid rounded-md">
         <p className="text-center text-primary text-[17px] font-bold">
@@ -412,16 +440,32 @@ export default function Orders() {
                 <Select
                   options={[
                     {
-                      value: "COMPLETED",
-                      label: "COMPLETED",
+                      value: "WAITING CONFIRMATION ORDER",
+                      label: "Đang Chờ Xác Nhận",
                     },
                     {
-                      value: "WAITING",
-                      label: "WAITING",
+                      value: "CONFIRMED ORDER",
+                      label: "Đã Xác Nhận Đơn Hàng",
                     },
                     {
-                      value: "CANCELED",
-                      label: "CANCELED",
+                      value: "SHIPPING CONFIRMATION",
+                      label: "Xác Nhận Vận Chuyển",
+                    },
+                    {
+                      value: "DELIVERY IN PROGRESS",
+                      label: "Đang Giao Hàng",
+                    },
+                    {
+                      value: "DELIVERY SUCCESS",
+                      label: "Giao Hàng Thành Công",
+                    },
+                    {
+                      value: "RECEIVED ORDER",
+                      label: "Đã Nhận Hàng",
+                    },
+                    {
+                      value: "CANCELED ORDER",
+                      label: "Đã Hủy Đơn Hàng",
                     },
                   ]}
                 />
@@ -452,7 +496,7 @@ export default function Orders() {
                     },
                     {
                       value: "CASH",
-                      label: "CASH",
+                      label: "Thanh Toán Bằng Tiền Mặt",
                     },
                   ]}
                 />
@@ -500,6 +544,7 @@ export default function Orders() {
           </Form>
         </div>
       </div>
+
       {/* Modal thêm mới sản phẩm */}
       <Button
         className="bg-blue-500 text-white font-bold mb-5 mt-5"
@@ -579,12 +624,20 @@ export default function Orders() {
                 { required: true, message: "Không thể để trống" },
                 {
                   validator: (_, value) => {
-                    console.log(value);
-
-                    if (["WAITING", "COMPLETED", "CANCELED"].includes(value)) {
+                    if (
+                      [
+                        "WAITING CONFIRMATION ORDER",
+                        "CONFIRMED ORDER",
+                        "SHIPPING CONFIRMATION",
+                        "DELIVERY IN PROGRESS",
+                        "DELIVERY SUCCESS",
+                        "RECEIVED ORDER",
+                        "CANCELED ORDER",
+                      ].includes(value)
+                    ) {
                       return Promise.resolve();
                     } else {
-                      return Promise.reject("Trạng thái không hợp lệ");
+                      return Promise.reject("Trạng thái không hợp lệ!");
                     }
                   },
                 },
@@ -593,20 +646,8 @@ export default function Orders() {
               <Select
                 options={[
                   {
-                    value: "COMPLETED",
-                    label: "COMPLETED",
-                  },
-                  {
-                    value: "WAITING",
-                    label: "WAITING",
-                  },
-                  {
-                    value: "CANCELED",
-                    label: "CANCELED",
-                  },
-                  {
-                    value: "A",
-                    label: "A",
+                    value: "WAITING CONFIRMATION ORDER",
+                    label: "Đang Chờ Xác Nhận",
                   },
                 ]}
               />
@@ -649,7 +690,7 @@ export default function Orders() {
                   },
                   {
                     value: "CASH",
-                    label: "CASH",
+                    label: "Thanh Toán Bằng Tiền Mặt",
                   },
                 ]}
               />
@@ -670,7 +711,12 @@ export default function Orders() {
               label="Số điện thoại"
               name="phoneNumber"
               rules={[
-                { required: true, message: "Không thể để trống" },
+                {
+                  required: true,
+                  message: "Số điện thoại không được để trống!",
+                },
+                { min: 10, message: "Số điện thoại không quá 10 chữ số!" },
+                { max: 10, message: "Số điện thoại không quá 10 chữ số!" },
                 {
                   validator: phoneValidator,
                 },
@@ -700,6 +746,7 @@ export default function Orders() {
           </div>
         </Form>
       </Modal>
+
       <Modal
         centered
         width={"90%"}
@@ -717,7 +764,7 @@ export default function Orders() {
               labelStyle={{ fontWeight: "700" }}
             >
               <Descriptions.Item label="Trạng thái">
-                {selectedOrder.status}
+                {renderStatus(selectedOrder.status)}
               </Descriptions.Item>
               <Descriptions.Item label="Khách hàng">
                 {selectedOrder.fullName}
@@ -836,6 +883,12 @@ export default function Orders() {
           onFinish={onUpdateFinish}
           onFinishFailed={onUpdateFinishFailed}
           autoComplete="off"
+          disabled={
+            selectedRecord &&
+            selectedRecord.status === "WAITING CONFIRMATION ORDER"
+              ? false
+              : true
+          }
         >
           <div className="w-[80%]">
             {/* Created Date */}
@@ -867,6 +920,18 @@ export default function Orders() {
                   validator: dateOfValidator,
                 },
                 { type: "date", message: "Ngày không hợp lệ" },
+                {
+                  validate: {
+                    validator: function (value) {
+                      if (!value) return true;
+                      if (value < createDate) {
+                        return false;
+                      }
+                      return true;
+                    },
+                    message: "Ngày giao phải nhỏ hơn ngày hiện tại",
+                  },
+                },
               ]}
             >
               <Input value={Date.now()} />
@@ -882,12 +947,20 @@ export default function Orders() {
                 { required: true, message: "Không thể để trống" },
                 {
                   validator: (_, value) => {
-                    console.log(value);
-
-                    if (["WAITING", "COMPLETED", "CANCELED"].includes(value)) {
+                    if (
+                      [
+                        "WAITING CONFIRMATION ORDER",
+                        "CONFIRMED ORDER",
+                        "SHIPPING CONFIRMATION",
+                        "DELIVERY IN PROGRESS",
+                        "DELIVERY SUCCESS",
+                        "RECEIVED ORDER",
+                        "CANCELED ORDER",
+                      ].includes(value)
+                    ) {
                       return Promise.resolve();
                     } else {
-                      return Promise.reject("Trạng thái không hợp lệ");
+                      return Promise.reject("Trạng thái không hợp lệ!");
                     }
                   },
                 },
@@ -896,16 +969,12 @@ export default function Orders() {
               <Select
                 options={[
                   {
-                    value: "COMPLETED",
-                    label: "COMPLETED",
+                    value: "WAITING CONFIRMATION ORDER",
+                    label: "Đang Chờ Xác Nhận",
                   },
                   {
-                    value: "WAITING",
-                    label: "WAITING",
-                  },
-                  {
-                    value: "CANCELED",
-                    label: "CANCELED",
+                    value: "CONFIRMED ORDER",
+                    label: "Đã Xác Nhận Đơn Hàng",
                   },
                 ]}
               />
@@ -948,7 +1017,7 @@ export default function Orders() {
                   },
                   {
                     value: "CASH",
-                    label: "CASH",
+                    label: "Thanh Toán Bằng Tiền Mặt",
                   },
                 ]}
               />
@@ -987,10 +1056,10 @@ export default function Orders() {
               <Select
                 options={
                   employees &&
-                  employees.map((suplier) => {
+                  employees.map((employee) => {
                     return {
-                      value: suplier._id,
-                      label: suplier.fullName,
+                      value: employee._id,
+                      label: employee.fullName,
                     };
                   })
                 }

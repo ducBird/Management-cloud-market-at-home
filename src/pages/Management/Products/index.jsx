@@ -211,18 +211,21 @@ function Products() {
     axiosClient
       .post("/products", values)
       .then((response) => {
-        //UPLOAD FILE
-        const { _id } = response.data;
-        const formData = new FormData();
-        formData.append("file", file);
-        axios
-          .post(`${API_URL}/upload-image/products/${_id}`, formData)
-          .then((response) => {
-            // message.success("Tải lên hình ảnh thành công!");
-          })
-          .catch((err) => {
-            message.error("Tải lên hình ảnh thất bại!");
-          });
+        if (values.file !== undefined) {
+          //UPLOAD FILE
+          const { _id } = response.data;
+          const formData = new FormData();
+          formData.append("file", file);
+          axios
+            .post(`${API_URL}/upload-image/products/${_id}`, formData)
+            .then((response) => {
+              // message.success("Tải lên hình ảnh thành công!");
+              // createForm.resetFields();
+            })
+            .catch((err) => {
+              message.error("Tải lên hình ảnh thất bại!");
+            });
+        }
         createForm.resetFields();
         setRefresh((f) => f + 1);
         message.success("Thêm thành công!");
@@ -242,20 +245,22 @@ function Products() {
     axiosClient
       .patch("/products/" + selectedRecord._id, values)
       .then((response) => {
-        const { _id } = response.data;
-        const formData = new FormData();
-        formData.append("file", file);
-        axios
-          .post(`${API_URL}/upload-image/products/${_id}`, formData)
-          .then((response) => {
-            message.success("Cập nhật thành công!");
-            updateForm.resetFields();
-            setRefresh((f) => f + 1);
-            setEditFormVisible(false);
-          })
-          .catch((err) => {
-            message.error("Tải lên hình ảnh thất bại!");
-          });
+        if (values.file !== undefined) {
+          const { _id } = response.data;
+          const formData = new FormData();
+          formData.append("file", file);
+          axios
+            .post(`${API_URL}/upload-image/products/${_id}`, formData)
+            .then((response) => {
+              message.success("Cập nhật thành công!");
+            })
+            .catch((err) => {
+              message.error("Tải lên hình ảnh thất bại!");
+            });
+        }
+        updateForm.resetFields();
+        setRefresh((f) => f + 1);
+        setEditFormVisible(false);
       })
       .catch((err) => {
         message.error("Cập nhật thất bại!");
@@ -290,7 +295,6 @@ function Products() {
   return (
     <>
       <h1 className="text-center p-2 mb-5 text-xl">🛒 Quản Lý Sản Phẩm 🛒</h1>
-
       {/* Search */}
       <div className="border border-solid rounded-md">
         <p className="text-center text-primary text-[17px] font-bold">
@@ -467,7 +471,12 @@ function Products() {
               className=""
               label="Danh mục"
               name="categoryId"
-              rules={[{ required: true, message: "Không thể để trống" }]}
+              rules={[
+                {
+                  required: true,
+                  message: "Danh mục sản phẩm không được để trống!",
+                },
+              ]}
             >
               <Select
                 options={
@@ -488,7 +497,12 @@ function Products() {
               className=""
               label="Tên sản phẩm"
               name="name"
-              rules={[{ required: true, message: "Không thể để trống" }]}
+              rules={[
+                {
+                  required: true,
+                  message: "Tên sản phẩm không được để trống!",
+                },
+              ]}
             >
               <Input />
             </Form.Item>
@@ -500,7 +514,7 @@ function Products() {
               label="Giá tiền"
               name="price"
               rules={[
-                { required: true, message: "Không thể để trống" },
+                { required: true, message: "Giá không được để trống!" },
                 {
                   validator: (_, value) => {
                     if (value < 0) {
@@ -575,7 +589,12 @@ function Products() {
               className=""
               label="Nhà cung cấp"
               name="supplierId"
-              rules={[{ required: true, message: "Không thể để trống" }]}
+              rules={[
+                {
+                  required: true,
+                  message: "Nhà cung cấp không được để trống!",
+                },
+              ]}
             >
               <Select
                 options={
@@ -601,13 +620,7 @@ function Products() {
             </Form.Item>
 
             {/* Hình ảnh */}
-            <Form.Item
-              label="Hình ảnh"
-              name="file"
-              rules={[
-                { required: true, message: "Hãy chọn hình ảnh cho sản phẩm!" },
-              ]}
-            >
+            <Form.Item label="Hình ảnh" name="file">
               <Upload
                 showUploadList={true}
                 // listType="picture-card"
@@ -662,7 +675,12 @@ function Products() {
             className=""
             label="Danh mục"
             name="categoryId"
-            rules={[{ required: true, message: "Không thể để trống" }]}
+            rules={[
+              {
+                required: true,
+                message: "Danh mục sản phẩm không được để trống!",
+              },
+            ]}
           >
             <Select
               options={
@@ -683,7 +701,9 @@ function Products() {
             className=""
             label="Tên sản phẩm"
             name="name"
-            rules={[{ required: true, message: "Không thể để trống" }]}
+            rules={[
+              { required: true, message: "Tên sản phẩm không được để trống!" },
+            ]}
           >
             <Input />
           </Form.Item>
@@ -695,7 +715,7 @@ function Products() {
             label="Giá tiền"
             name="price"
             rules={[
-              { required: true, message: "Không thể để trống" },
+              { required: true, message: "Giá không được để trống!" },
               {
                 validator: (_, value) => {
                   if (value < 0) {
@@ -770,7 +790,9 @@ function Products() {
             className=""
             label="Nhà cung cấp"
             name="supplierId"
-            rules={[{ required: true, message: "Không thể để trống" }]}
+            rules={[
+              { required: true, message: "Nhà cung cấp không được để trống!" },
+            ]}
           >
             <Select
               options={
@@ -791,13 +813,7 @@ function Products() {
           </Form.Item>
 
           {/* Hình ảnh */}
-          <Form.Item
-            label="Hình ảnh"
-            name="file"
-            rules={[
-              { required: true, message: "Hãy chọn hình ảnh cho sản phẩm!" },
-            ]}
-          >
+          <Form.Item label="Hình ảnh" name="file">
             <Upload
               showUploadList={true}
               // listType="picture-card"

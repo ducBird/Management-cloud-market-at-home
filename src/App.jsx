@@ -1,19 +1,19 @@
 import "./App.css";
 import { useState } from "react";
 import React from "react";
+import cmah_logo from "./assets/logo/cloud-market.jpg";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AiOutlineWarning } from "react-icons/ai";
+import { Layout, message, Menu } from "antd";
 
-import cmah_logo from "/cloud-market.jpg";
+import { useUser } from "./hooks/useUser";
 
 import HeaderMenu from "./components/HeaderMenu";
 import SiderMenu from "./components/SiderMenu";
-
 import HomePage from "./pages/Home/HomePage";
+import Management from "./pages/Management";
 import Categories from "./pages/Management/Categories";
 import Products from "./pages/Management/Products";
-
-import { Layout, message, Menu } from "antd";
 import Employees from "./pages/Management/Employees";
 import Customers from "./pages/Management/Customers";
 import Suppliers from "./pages/Management/Suppliers";
@@ -21,7 +21,6 @@ import Orders from "./pages/Sales/Orders";
 import Login from "./pages/Login";
 import Accounts from "./pages/Management/Accounts";
 import GuestService from "./pages/Management/GuestServices";
-
 import { useUser } from "./hooks/useUser";
 import SearchOrdersByStatus from "./pages/Sales/Orders/SearchOrdersByStatus";
 import SearchOrdersByPaymentType from "./pages/Sales/Orders/SearchOrdersByPaymentType";
@@ -31,6 +30,12 @@ import StatisticsOrdersByAddress from "./pages/Sales/Customes/StatisticsCustomer
 import OrderStatisticsByCategory from "./pages/Sales/Orders/OrderStatisticsByCategory";
 import StatisticsTotalOrdersByMonth from "./pages/Sales/Orders/StatisticsTotalOrdersByMonth";
 import StatisticsByTotalOrders from "./pages/Sales/Orders/StatisticsByTotalOrders";
+import Shipping from "./pages/Shipping";
+import UnresolvedOrder from "./pages/Shipping/UnresolvedOrder";
+import ResolvingOrder from "./pages/Shipping/ResolvingOrder";
+import ResolvedOrder from "./pages/Shipping/ResolvedOrder";
+import WareHouse from "./pages/WareHouse";
+import WaitingPickUp from "./pages/WareHouse/WaitingPickUp";
 
 const { Header, Content, Sider } = Layout;
 function App() {
@@ -93,11 +98,29 @@ function App() {
                   {/* HOME */}
                   <Route path="/home" element={<HomePage />} />
 
+                  {/* MANAGEMENT */}
+                  {users.roles === undefined ? (
+                    <Route path="/" element={<Login />} />
+                  ) : users.roles.some((role) => {
+                      return (
+                        role === "directors" ||
+                        role === "administrator" ||
+                        role === "managers" ||
+                        role === "sales"
+                      );
+                    }) ? (
+                    <Route path="/management" element={<Management />} />
+                  ) : (
+                    <Route path="*" element={<div>Not found</div>} />
+                  )}
+
                   {/* LOGIN */}
                   <Route path="/account" element={<Login />} />
 
                   {/* MANAGEMENT */}
+                  {/* Management-Accounts */}
                   <Route path="/management/accounts" element={<Accounts />} />
+                  {/* Management-Employees */}
                   {users.roles === undefined ? (
                     <Route path="/" element={<Login />} />
                   ) : users.roles.some((role) => {
@@ -114,19 +137,110 @@ function App() {
                   ) : (
                     <Route path="*" element={<div>Not found</div>} />
                   )}
-                  <Route
-                    path="/management/categories"
-                    element={<Categories />}
-                  />
-                  <Route path="/management/products" element={<Products />} />
-                  <Route path="/management/customers" element={<Customers />} />
-                  <Route path="/management/suppliers" element={<Suppliers />} />
-                  <Route
-                    path="/management/guestServices"
-                    element={<GuestService />}
-                  />
+                  {/* Management-Categories */}
+                  {users.roles === undefined ? (
+                    <Route path="/" element={<Login />} />
+                  ) : users.roles.some((role) => {
+                      // console.log(role);
+                      return [
+                        "directors",
+                        "administrator",
+                        "managers",
+                      ].includes(role);
+                    }) ? (
+                    <Route
+                      path="/management/categories"
+                      element={<Categories />}
+                    />
+                  ) : (
+                    <Route path="*" element={<div>Not found</div>} />
+                  )}
+                  {/* Management-Products */}
+                  {users.roles === undefined ? (
+                    <Route path="/" element={<Login />} />
+                  ) : users.roles.some((role) => {
+                      return (
+                        role === "directors" ||
+                        role === "administrator" ||
+                        role === "managers" ||
+                        role === "sales"
+                      );
+                    }) ? (
+                    <Route path="/management/products" element={<Products />} />
+                  ) : (
+                    <Route path="*" element={<div>Not found</div>} />
+                  )}
+                  {/* Management-Customers */}
+                  {users.roles === undefined ? (
+                    <Route path="/" element={<Login />} />
+                  ) : users.roles.some((role) => {
+                      return (
+                        role === "directors" ||
+                        role === "administrator" ||
+                        role === "managers" ||
+                        role === "sales"
+                      );
+                    }) ? (
+                    <Route
+                      path="/management/customers"
+                      element={<Customers />}
+                    />
+                  ) : (
+                    <Route path="*" element={<div>Not found</div>} />
+                  )}
+                  {/* Management-Suppliers */}
+                  {users.roles === undefined ? (
+                    <Route path="/" element={<Login />} />
+                  ) : users.roles.some((role) => {
+                      return (
+                        role === "directors" ||
+                        role === "administrator" ||
+                        role === "managers" ||
+                        role === "sales"
+                      );
+                    }) ? (
+                    <Route
+                      path="/management/suppliers"
+                      element={<Suppliers />}
+                    />
+                  ) : (
+                    <Route path="*" element={<div>Not found</div>} />
+                  )}
+                  {/* Management-GuestServices */}
+                  {users.roles === undefined ? (
+                    <Route path="/" element={<Login />} />
+                  ) : users.roles.some((role) => {
+                      return (
+                        role === "directors" ||
+                        role === "administrator" ||
+                        role === "managers" ||
+                        role === "sales"
+                      );
+                    }) ? (
+                    <Route
+                      path="/management/guestServices"
+                      element={<GuestService />}
+                    />
+                  ) : (
+                    <Route path="*" element={<div>Not found</div>} />
+                  )}
+
                   {/* SALES */}
-                  <Route path="/sales/orders" element={<Orders />} />
+                  {users.roles === undefined ? (
+                    <Route path="/" element={<Login />} />
+                  ) : users.roles.some((role) => {
+                      return (
+                        role === "directors" ||
+                        role === "administrator" ||
+                        role === "managers" ||
+                        role === "sales"
+                      );
+                    }) ? (
+                    <Route path="/sales/orders" element={<Orders />} />
+                  ) : (
+                    <Route path="*" element={<div>Not found</div>} />
+                  )}
+                  {/* Sales-Orders/Status */}
                   <Route
                     path="sales/orders/status"
                     element={<SearchOrdersByStatus />}
@@ -163,6 +277,110 @@ function App() {
                     path="sales/statistics/orders/customers/address"
                     element={<StatisticsOrdersByAddress />}
                   />
+
+                  {/* SHIPPING */}
+                  {users.roles === undefined ? (
+                    <Route path="/" element={<Login />} />
+                  ) : users.roles.some((role) => {
+                      return (
+                        role === "directors" ||
+                        role === "administrator" ||
+                        role === "managers" ||
+                        role === "shipper"
+                      );
+                    }) ? (
+                    <Route path="/shipping" element={<Shipping />} />
+                  ) : (
+                    <Route path="*" element={<div>Not found</div>} />
+                  )}
+                  {/* Shipping-UnresolvedOrder */}
+                  {users.roles === undefined ? (
+                    <Route path="/" element={<Login />} />
+                  ) : users.roles.some((role) => {
+                      return (
+                        role === "directors" ||
+                        role === "administrator" ||
+                        role === "managers" ||
+                        role === "shipper"
+                      );
+                    }) ? (
+                    <Route
+                      path="/shipping/unresolved"
+                      element={<UnresolvedOrder />}
+                    />
+                  ) : (
+                    <Route path="*" element={<div>Not found</div>} />
+                  )}
+                  {/* Shipping-ResolvingOrder */}
+                  {users.roles === undefined ? (
+                    <Route path="/" element={<Login />} />
+                  ) : users.roles.some((role) => {
+                      return (
+                        role === "directors" ||
+                        role === "administrator" ||
+                        role === "managers" ||
+                        role === "shipper"
+                      );
+                    }) ? (
+                    <Route
+                      path="/shipping/resolving"
+                      element={<ResolvingOrder />}
+                    />
+                  ) : (
+                    <Route path="*" element={<div>Not found</div>} />
+                  )}
+                  {/* Shipping-ResolvedOrder */}
+                  {users.roles === undefined ? (
+                    <Route path="/" element={<Login />} />
+                  ) : users.roles.some((role) => {
+                      return (
+                        role === "directors" ||
+                        role === "administrator" ||
+                        role === "managers" ||
+                        role === "shipper"
+                      );
+                    }) ? (
+                    <Route
+                      path="/shipping/resolved"
+                      element={<ResolvedOrder />}
+                    />
+                  ) : (
+                    <Route path="*" element={<div>Not found</div>} />
+                  )}
+
+                  {/* WAREHOUSE */}
+                  {users.roles === undefined ? (
+                    <Route path="/" element={<Login />} />
+                  ) : users.roles.some((role) => {
+                      return (
+                        role === "directors" ||
+                        role === "administrator" ||
+                        role === "managers" ||
+                        role === "warehouse"
+                      );
+                    }) ? (
+                    <Route path="/warehouse" element={<WareHouse />} />
+                  ) : (
+                    <Route path="*" element={<div>Not found</div>} />
+                  )}
+                  {users.roles === undefined ? (
+                    <Route path="/" element={<Login />} />
+                  ) : users.roles.some((role) => {
+                      return (
+                        role === "directors" ||
+                        role === "administrator" ||
+                        role === "managers" ||
+                        role === "warehouse"
+                      );
+                    }) ? (
+                    <Route
+                      path="/warehouse/waitingpickup"
+                      element={<WaitingPickUp />}
+                    />
+                  ) : (
+                    <Route path="*" element={<div>Not found</div>} />
+                  )}
+
                   {/* NO MATCH ROUTE */}
                   <Route
                     path="*"

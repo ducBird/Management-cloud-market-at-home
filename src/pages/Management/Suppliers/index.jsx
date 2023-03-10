@@ -117,13 +117,13 @@ function Suppliers() {
     axiosClient
       .patch("/suppliers/" + selectedRecord._id, values)
       .then((response) => {
-        message.success("Cập nhật thành công");
+        message.success("Cập nhật thành công!");
         updateForm.resetFields();
         setRefresh((f) => f + 1);
         setEditFormVisible(false);
       })
       .catch((err) => {
-        message.error("Cập nhật thất bại");
+        message.error("Cập nhật thất bại!");
       });
   };
 
@@ -202,6 +202,9 @@ function Suppliers() {
             label="Số điện thoại"
             name="phoneNumber"
             rules={[
+              { required: true, message: "Số điện thoại không được để trống!" },
+              { min: 10, message: "Số điện thoại không quá 10 chữ số!" },
+              { max: 10, message: "Số điện thoại không quá 10 chữ số!" },
               {
                 validator: phoneValidator,
               },
@@ -233,6 +236,7 @@ function Suppliers() {
       >
         Thêm mới nhà cung cấp
       </Button>
+
       <Modal
         centered
         open={createFormVisible}
@@ -263,7 +267,12 @@ function Suppliers() {
             className=""
             label="Tên nhà cung cấp"
             name="name"
-            rules={[{ required: true, message: "Không thể để trống" }]}
+            rules={[
+              {
+                required: true,
+                message: "Tên nhà cung cấp không được để trống!",
+              },
+            ]}
           >
             <Input />
           </Form.Item>
@@ -275,8 +284,8 @@ function Suppliers() {
             label="Email"
             name="email"
             rules={[
-              { required: true, message: "Không thể để trống" },
-              { type: "email", message: "Email không hợp lệ" },
+              { required: true, message: "Email không thể để trống!" },
+              { type: "email", message: "Email không hợp lệ!" },
             ]}
           >
             <Input />
@@ -289,7 +298,9 @@ function Suppliers() {
             label="Số điện thoại"
             name="phoneNumber"
             rules={[
-              { required: true, message: "Không thể để trống" },
+              { required: true, message: "Số điện thoại không được để trống!" },
+              { min: 10, message: "Số điện thoại không quá 10 chữ số!" },
+              { max: 10, message: "Số điện thoại không quá 10 chữ số!" },
               {
                 validator: phoneValidator,
               },
@@ -304,7 +315,9 @@ function Suppliers() {
             className=""
             label="Địa chỉ"
             name="address"
-            rules={[{ required: true, message: "Không thể để trống" }]}
+            rules={[
+              { required: true, message: "Địa chỉ không được để trống!" },
+            ]}
           >
             <Input />
           </Form.Item>
@@ -342,7 +355,12 @@ function Suppliers() {
             className=""
             label="Tên nhà cung cấp"
             name="name"
-            rules={[{ required: true, message: "Không thể để trống" }]}
+            rules={[
+              {
+                required: true,
+                message: "Tên nhà cung cấp không được để trống!",
+              },
+            ]}
           >
             <Input />
           </Form.Item>
@@ -354,8 +372,8 @@ function Suppliers() {
             label="Email"
             name="email"
             rules={[
-              { required: true, message: "Không thể để trống" },
-              { type: "email", message: "Email không hợp lệ" },
+              { required: true, message: "Email không thể để trống!" },
+              { type: "email", message: "Email không hợp lệ!" },
             ]}
           >
             <Input />
@@ -368,7 +386,9 @@ function Suppliers() {
             label="Số điện thoại"
             name="phoneNumber"
             rules={[
-              { required: true, message: "Không thể để trống" },
+              { required: true, message: "Số điện thoại không được để trống!" },
+              { min: 10, message: "Số điện thoại không quá 10 chữ số!" },
+              { max: 10, message: "Số điện thoại không quá 10 chữ số!" },
               {
                 validator: phoneValidator,
               },
@@ -383,7 +403,9 @@ function Suppliers() {
             className=""
             label="Địa chỉ"
             name="address"
-            rules={[{ required: true, message: "Không thể để trống" }]}
+            rules={[
+              { required: true, message: "Địa chỉ không được để trống!" },
+            ]}
           >
             <Input />
           </Form.Item>
