@@ -604,7 +604,6 @@ export default function Orders() {
               label="Ngày giao"
               name="shippedDate"
               rules={[
-                { required: true, message: "Không thể để trống" },
                 {
                   validator: dateOfValidator,
                 },
@@ -913,7 +912,6 @@ export default function Orders() {
               label="Ngày giao"
               name="shippedDate"
               rules={[
-                { required: true, message: "Không thể để trống" },
                 {
                   validator: dateOfValidator,
                 },
