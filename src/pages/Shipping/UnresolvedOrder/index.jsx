@@ -447,7 +447,6 @@ export default function UnresolvedOrder() {
       {/* Modal view detail order */}
       <Modal
         centered
-        width={"90%"}
         title="Chi tiết đơn hàng"
         open={selectedOrder}
         onOk={() => {

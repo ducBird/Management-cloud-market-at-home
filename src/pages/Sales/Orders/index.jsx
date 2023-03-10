@@ -749,7 +749,6 @@ export default function Orders() {
 
       <Modal
         centered
-        width={"90%"}
         title="Chi tiết đơn hàng"
         open={selectedOrder}
         onCancel={() => {
@@ -803,7 +802,6 @@ export default function Orders() {
 
             <Modal
               centered
-              width={"80%"}
               title="Danh sách sản phẩm"
               open={addProductsModalVisible}
               onCancel={() => {

@@ -188,19 +188,19 @@ export default function SiderMenu() {
           icon: <MdOutlineArticle />,
           children: [
             {
-              label: "Thống kê đơn hàng theo danh mục",
+              label: "Đơn hàng theo danh mục",
               key: "sales-orders-statistics-category",
             },
             {
-              label: "Thống kê tổng đơn hàng theo tháng",
+              label: "Tổng đơn hàng theo tháng",
               key: "sales-total-orders-statistics-month",
             },
             {
-              label: "Thống kê đơn hàng theo trạng thái",
+              label: "Đơn hàng theo trạng thái",
               key: "sales-orders-status",
             },
             {
-              label: "Thống kê theo phương thức thanh toán",
+              label: "Theo phương thức thanh toán",
               key: "sales-orders-payment",
             },
             {
@@ -208,15 +208,15 @@ export default function SiderMenu() {
               key: "sales-orders-phoneNumber",
             },
             {
-              label: "Thống kê đơn hàng theo ngày",
+              label: "Đơn hàng theo ngày",
               key: "sales-orders-date",
             },
             {
-              label: "Thống kê đơn hàng theo doanh thu",
+              label: "Đơn hàng theo doanh thu",
               key: "orders-revenue",
               children: [
                 {
-                  label: "Thống kê doanh thu theo tổng đơn hàng",
+                  label: "Doanh thu theo tổng đơn hàng",
                   key: "orders-statistics-by-total",
                 },
               ],
@@ -296,6 +296,43 @@ export default function SiderMenu() {
     },
     { label: "Cài Đặt", key: "settings", icon: <AiOutlineSetting /> },
   ];
+
+  const itemsSiderForShipper = [
+    {
+      label: "Quản Lý Vận Chuyển",
+      key: "shipping",
+      icon: <AiOutlineCar />,
+      children: [
+        {
+          label: "Chưa Vận Chuyển",
+          key: "shipping-unresolved",
+        },
+        {
+          label: "Đang Vận Chuyển",
+          key: "shipping-resolving",
+        },
+        {
+          label: "Đã Vận Chuyển",
+          key: "shipping-resolved",
+        },
+      ],
+    },
+  ];
+
+  const itemsSiderForWareHouse = [
+    {
+      label: "Quản Lý Kho",
+      key: "warehouse",
+      icon: <FaWarehouse />,
+      children: [
+        {
+          label: "Vận chuyển",
+          key: "warehouse-waitingpickup",
+        },
+      ],
+    },
+  ];
+
   // Sử dụng với Redux
   // const [collapsed, setCollapsed] = useState(false);
   // const toggleCollapsed = () => {
@@ -305,14 +342,30 @@ export default function SiderMenu() {
   return (
     <div>
       <Menu
-        // theme="light"
-        // mode="inline"
-        // style={{
-        //   height: "100%",
-        //   borderRight: 0,
-        // }}
+        theme="light"
+        mode="inline"
+        style={{
+          height: "100%",
+          borderRight: 0,
+        }}
         //inlineCollapsed={collapsed}
-        items={itemsSider}
+        items={
+          users.roles &&
+          users.roles.some((role) => {
+            return (
+              role === "directors" ||
+              role === "administrator" ||
+              role === "managers" ||
+              role === "sales"
+            );
+          })
+            ? itemsSider
+            : users.roles.some((role) => {
+                return role === "shipper";
+              })
+            ? itemsSiderForShipper
+            : itemsSiderForWareHouse
+        }
         onClick={({ key, keyPath, domEvent }) => {
           navigate("/" + key.split("-").join("/"));
           // console.log(key);

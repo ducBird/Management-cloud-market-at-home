@@ -4,6 +4,25 @@ import { axiosClient } from "../../../libraries/axiosClient";
 import numeral from "numeral";
 import moment from "moment";
 function SearchOrdersByPhoneNumber() {
+  const renderStatus = (result) => {
+    return (
+      <div>
+        {result && result === "WAITING CONFIRMATION ORDER"
+          ? "Đang Chờ Xác Nhận"
+          : result === "CONFIRMED ORDER"
+          ? "Đã Xác Nhận Đơn Hàng"
+          : result === "SHIPPING CONFIRMATION"
+          ? "Xác Nhận Vận Chuyển"
+          : result === "DELIVERY IN PROGRESS"
+          ? "Đang Giao Hàng"
+          : result === "DELIVERY SUCCESS"
+          ? "Giao Hàng Thành Công"
+          : result === "RECEIVED ORDER"
+          ? "Đã Nhận Hàng"
+          : "Đã Hủy Đơn Hàng"}
+      </div>
+    );
+  };
   const columns = [
     {
       title: "Khách hàng",
@@ -31,6 +50,9 @@ function SearchOrdersByPhoneNumber() {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      render: (text, record) => {
+        return renderStatus(text);
+      },
     },
 
     {

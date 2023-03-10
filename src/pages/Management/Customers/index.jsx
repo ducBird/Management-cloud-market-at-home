@@ -235,7 +235,7 @@ function Customers() {
           axios
             .post(`${API_URL}/upload-image/customers/${_id}`, formData)
             .then((response) => {
-              message.success("Tải lên hình ảnh thành công!");
+              message.success("Cập nhật thành công!");
             })
             .catch((err) => {
               message.error("Tải lên hình ảnh thất bại!");
@@ -664,6 +664,8 @@ function Customers() {
             name="phoneNumber"
             rules={[
               { required: true, message: "Số điện thoại không được để trống!" },
+              { min: 10, message: "Số điện thoại không quá 10 chữ số!" },
+              { max: 10, message: "Số điện thoại không quá 10 chữ số!" },
               {
                 validator: phoneValidator,
               },
@@ -703,7 +705,6 @@ function Customers() {
 
           <Form.Item label="Trạng thái" name="active">
             <Select
-              defaultValue={"true"}
               options={[
                 {
                   value: "true",

@@ -28,7 +28,6 @@ import { useUser } from "../../../hooks/useUser";
 
 function Employees() {
   const [employees, setEmployees] = useState([]);
-  const [accounts, setAccounts] = useState([]);
   const [refresh, setRefresh] = useState(0);
   const [editFormVisible, setEditFormVisible] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
@@ -764,7 +763,7 @@ function Employees() {
               { type: "date", message: "Ngày sinh không hợp lệ" },
             ]}
           >
-            <DatePicker format="YYYY/MM/DD" />
+            <Input />
           </Form.Item>
 
           <Form.Item label="Trạng thái" name="active">
