@@ -397,13 +397,14 @@ function Products() {
             .post(`${API_URL}/upload-image/products/${_id}`, formData)
             .then((response) => {
               message.success("Cập nhật thành công!");
+              setRefresh((f) => f + 1);
             })
             .catch((err) => {
               message.error("Tải lên hình ảnh thất bại!");
             });
         }
         updateForm.resetFields();
-        setRefresh((f) => f + 1);
+
         setEditFormVisible(false);
       })
       .catch((err) => {
@@ -776,13 +777,6 @@ function Products() {
                   <AiOutlinePlus size={"20px"} />
                 </div>
               </Upload>
-            </Form.Item>
-
-            {/* Button Save */}
-            <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-              <Button type="primary" htmlType="submit">
-                Lưu
-              </Button>
             </Form.Item>
           </div>
         </Form>

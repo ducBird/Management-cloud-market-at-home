@@ -470,11 +470,6 @@ function Categories() {
               >
                 <div className="flex justify-center items-center w-[100px] h-[100px] border border-dashed rounded-lg hover:cursor-pointer hover:border-blue-400 hover:bg-white transition-all ease-in duration-150">
                   <AiOutlinePlus size={"20px"} />
-                  <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-                    <Button type="primary" htmlType="submit">
-                      Lưu
-                    </Button>
-                  </Form.Item>
                 </div>
               </Upload>
             </Form.Item>

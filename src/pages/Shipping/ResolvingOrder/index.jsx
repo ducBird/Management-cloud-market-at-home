@@ -366,7 +366,6 @@ export default function ResolvingOrder() {
       {/* Modal view detail order */}
       <Modal
         centered
-        width={"90%"}
         title="Chi tiết đơn hàng"
         open={selectedOrder}
         onOk={() => {
